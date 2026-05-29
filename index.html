@@ -19,7 +19,7 @@
   }
 </script>
 
-<title>DAN'S BEAT SPEED DETECTOR - V34</title>
+<title>DAN'S BEAT SPEED DETECTOR - V35</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -260,58 +260,28 @@
   }
 </style>
 <script>
-  // Dynamically generate the App Icon instantly before the page fully loads
   (function generateAppIcon() {
     const canvas = document.createElement('canvas');
     canvas.width = 256;
     canvas.height = 256;
     const ctx = canvas.getContext('2d');
-
-    // White Background
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, 256, 256);
-
-    // Font Setup - matching the heavy italic title, scaled down for 2 lines
     ctx.font = 'italic 900 110px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-
-    // D B over S D (Dan's Beat Speed Detector)
-    const lines = [
-      { text: 'DB', x: 124, y: 80 }, 
-      { text: 'SD', x: 124, y: 185 }
-    ];
-
-    // Draw thick black outline/shadow effect
+    const lines = [ { text: 'DB', x: 124, y: 80 }, { text: 'SD', x: 124, y: 185 } ];
     ctx.fillStyle = '#000000';
-    const offsets = [
-      [6,6], [-6,-6], [6,-6], [-6,6],
-      [6,0], [-6,0], [0,6], [0,-6],
-      [4,4], [-4,-4], [4,-4], [-4,4]
-    ];
-    lines.forEach(line => {
-      offsets.forEach(off => {
-        ctx.fillText(line.text, line.x + off[0], line.y + off[1]);
-      });
-    });
-
-    // Draw the main Red Text over the top
+    const offsets = [ [6,6], [-6,-6], [6,-6], [-6,6], [6,0], [-6,0], [0,6], [0,-6], [4,4], [-4,-4], [4,-4], [-4,4] ];
+    lines.forEach(line => { offsets.forEach(off => { ctx.fillText(line.text, line.x + off[0], line.y + off[1]); }); });
     ctx.fillStyle = '#ff0000';
-    lines.forEach(line => {
-      ctx.fillText(line.text, line.x, line.y);
-    });
-
-    // Convert to a clean PNG data URL
+    lines.forEach(line => { ctx.fillText(line.text, line.x, line.y); });
     const dataUrl = canvas.toDataURL('image/png');
-
-    // Inject regular browser favicon
     const icon = document.createElement('link');
     icon.rel = 'icon';
     icon.type = 'image/png';
     icon.href = dataUrl;
     document.head.appendChild(icon);
-
-    // Inject Apple Touch Icon for "Add to Home Screen"
     const appleIcon = document.createElement('link');
     appleIcon.rel = 'apple-touch-icon';
     appleIcon.href = dataUrl;
@@ -434,8 +404,8 @@
               <button class="action-btn listen-btn" onclick="handleListen(this, 57, 'OCT_21')">2:1</button>
             </div>
             <div class="action-row">
-              <button class="action-btn" data-midi="53" data-iv="M3" data-label="F3 (M3)" onclick="handleAction(this, 53, 'M3')">F3 (M3)</button>
-              <button class="action-btn" data-midi="53" data-iv="M10" data-label="F3 (M10)" onclick="handleAction(this, 53, 'M10')">F3 (M10)</button>
+              <button class="action-btn" data-midi="53" data-iv="M3" data-label="F3 M3 A3" onclick="handleAction(this, 53, 'M3')">F3 M3 A3</button>
+              <button class="action-btn" data-midi="53" data-iv="M10" data-label="F3 M10 A4" onclick="handleAction(this, 53, 'M10')">F3 M10 A4</button>
             </div>
             <div class="guide-result guide-res-wait" id="guideRes2">Awaiting logs...</div>
           </div>
@@ -443,7 +413,7 @@
             <h3>Step 3: Set F3 Anchor</h3>
             <div class="tuning-target">Tuning: F3</div>
             <p>Aim for ~6.93 bps.</p>
-            <div class="action-row"><button class="action-btn" data-midi="53" data-iv="M3" data-label="F3 (M3)" onclick="handleAction(this, 53, 'M3')">F3 (M3)</button></div>
+            <div class="action-row"><button class="action-btn" data-midi="53" data-iv="M3" data-label="F3 M3 A3" onclick="handleAction(this, 53, 'M3')">F3 M3 A3</button></div>
             <div class="guide-result guide-res-wait" id="guideRes3">Awaiting logs...</div>
           </div>
           <div class="guide-step">
@@ -453,8 +423,8 @@
               <button class="action-btn listen-btn" onclick="handleListen(this, 53, 'OCT_42')">4:2</button>
             </div>
             <div class="action-row">
-              <button class="action-btn" data-midi="49" data-iv="M3" data-label="C#3 (M3)" onclick="handleAction(this, 49, 'M3')">C#3 (M3)</button>
-              <button class="action-btn" data-midi="49" data-iv="M10" data-label="C#3 (M10)" onclick="handleAction(this, 49, 'M10')">C#3 (M10)</button>
+              <button class="action-btn" data-midi="49" data-iv="M3" data-label="C#3 M3 F3" onclick="handleAction(this, 49, 'M3')">C#3 M3 F3</button>
+              <button class="action-btn" data-midi="49" data-iv="M10" data-label="C#3 M10 F4" onclick="handleAction(this, 49, 'M10')">C#3 M10 F4</button>
             </div>
             <div class="guide-result guide-res-wait" id="guideRes4">Awaiting logs...</div>
           </div>
@@ -462,9 +432,9 @@
             <h3>Step 5: 'F' Skeleton (Contiguous 3rds)</h3>
             <div class="tuning-target">Tuning: C#4</div>
             <div class="action-row">
-              <button class="action-btn" data-midi="53" data-iv="M3" data-label="F3 (M3)" onclick="handleAction(this, 53, 'M3')">F3 (M3)</button>
-              <button class="action-btn" data-midi="57" data-iv="M3" data-label="A3 (M3)" onclick="handleAction(this, 57, 'M3')">A3 (M3)</button>
-              <button class="action-btn" data-midi="61" data-iv="M3" data-label="C#4 (M3)" onclick="handleAction(this, 61, 'M3')">C#4 (M3)</button>
+              <button class="action-btn" data-midi="53" data-iv="M3" data-label="F3 M3 A3" onclick="handleAction(this, 53, 'M3')">F3 M3 A3</button>
+              <button class="action-btn" data-midi="57" data-iv="M3" data-label="A3 M3 C#4" onclick="handleAction(this, 57, 'M3')">A3 M3 C#4</button>
+              <button class="action-btn" data-midi="61" data-iv="M3" data-label="C#4 M3 F4" onclick="handleAction(this, 61, 'M3')">C#4 M3 F4</button>
             </div>
             <div class="guide-result guide-res-wait" id="guideRes5">Awaiting logs...</div>
           </div>
@@ -472,11 +442,11 @@
             <h3>Step 6: 'F#' Skeleton</h3>
             <div class="tuning-target">Tuning: A#3 (and F#3)</div>
             <div class="action-row">
-              <button class="action-btn" data-midi="54" data-iv="P5" data-label="F#3 (P5)" onclick="handleAction(this, 54, 'P5')">F#3 (P5)</button>
-              <button class="action-btn" data-midi="53" data-iv="P4" data-label="F3 (P4)" onclick="handleAction(this, 53, 'P4')">F3 (P4)</button>
-              <button class="action-btn" data-midi="57" data-iv="P4" data-label="A3 (P4)" onclick="handleAction(this, 57, 'P4')">A3 (P4)</button>
-              <button class="action-btn" data-midi="54" data-iv="M3" data-label="F#3 (M3)" onclick="handleAction(this, 54, 'M3')">F#3 (M3)</button>
-              <button class="action-btn" data-midi="58" data-iv="M3" data-label="A#3 (M3)" onclick="handleAction(this, 58, 'M3')">A#3 (M3)</button>
+              <button class="action-btn" data-midi="54" data-iv="P5" data-label="F#3 P5 C#4" onclick="handleAction(this, 54, 'P5')">F#3 P5 C#4</button>
+              <button class="action-btn" data-midi="53" data-iv="P4" data-label="F3 P4 A#3" onclick="handleAction(this, 53, 'P4')">F3 P4 A#3</button>
+              <button class="action-btn" data-midi="57" data-iv="P4" data-label="A3 P4 D4" onclick="handleAction(this, 57, 'P4')">A3 P4 D4</button>
+              <button class="action-btn" data-midi="54" data-iv="M3" data-label="F#3 M3 A#3" onclick="handleAction(this, 54, 'M3')">F#3 M3 A#3</button>
+              <button class="action-btn" data-midi="58" data-iv="M3" data-label="A#3 M3 D4" onclick="handleAction(this, 58, 'M3')">A#3 M3 D4</button>
             </div>
             <div class="guide-result guide-res-wait" id="guideRes6">Awaiting M3 and P4/P5 checks...</div>
           </div>
@@ -484,11 +454,11 @@
             <h3>Step 7: 'G' Skeleton</h3>
             <div class="tuning-target">Tuning: B3 (and G3)</div>
             <div class="action-row">
-              <button class="action-btn" data-midi="55" data-iv="P5" data-label="G3 (P5)" onclick="handleAction(this, 55, 'P5')">G3 (P5)</button>
-              <button class="action-btn" data-midi="54" data-iv="P4" data-label="F#3 (P4)" onclick="handleAction(this, 54, 'P4')">F#3 (P4)</button>
-              <button class="action-btn" data-midi="58" data-iv="P4" data-label="A#3 (P4)" onclick="handleAction(this, 58, 'P4')">A#3 (P4)</button>
-              <button class="action-btn" data-midi="55" data-iv="M3" data-label="G3 (M3)" onclick="handleAction(this, 55, 'M3')">G3 (M3)</button>
-              <button class="action-btn" data-midi="59" data-iv="M3" data-label="B3 (M3)" onclick="handleAction(this, 59, 'M3')">B3 (M3)</button>
+              <button class="action-btn" data-midi="55" data-iv="P5" data-label="G3 P5 D4" onclick="handleAction(this, 55, 'P5')">G3 P5 D4</button>
+              <button class="action-btn" data-midi="54" data-iv="P4" data-label="F#3 P4 B3" onclick="handleAction(this, 54, 'P4')">F#3 P4 B3</button>
+              <button class="action-btn" data-midi="58" data-iv="P4" data-label="A#3 P4 D#4" onclick="handleAction(this, 58, 'P4')">A#3 P4 D#4</button>
+              <button class="action-btn" data-midi="55" data-iv="M3" data-label="G3 M3 B3" onclick="handleAction(this, 55, 'M3')">G3 M3 B3</button>
+              <button class="action-btn" data-midi="59" data-iv="M3" data-label="B3 M3 D#4" onclick="handleAction(this, 59, 'M3')">B3 M3 D#4</button>
             </div>
             <div class="guide-result guide-res-wait" id="guideRes7">Awaiting M3 and P4/P5 checks...</div>
           </div>
@@ -496,22 +466,26 @@
             <h3>Step 8: 'G#' Skeleton</h3>
             <div class="tuning-target">Tuning: C4 (and G#3)</div>
             <div class="action-row">
-              <button class="action-btn" data-midi="56" data-iv="P5" data-label="G#3 (P5)" onclick="handleAction(this, 56, 'P5')">G#3 (P5)</button>
-              <button class="action-btn" data-midi="55" data-iv="P4" data-label="G3 (P4)" onclick="handleAction(this, 55, 'P4')">G3 (P4)</button>
-              <button class="action-btn" data-midi="59" data-iv="P4" data-label="B3 (P4)" onclick="handleAction(this, 59, 'P4')">B3 (P4)</button>
-              <button class="action-btn" data-midi="56" data-iv="M3" data-label="G#3 (M3)" onclick="handleAction(this, 56, 'M3')">G#3 (M3)</button>
-              <button class="action-btn" data-midi="60" data-iv="M3" data-label="C4 (M3)" onclick="handleAction(this, 60, 'M3')">C4 (M3)</button>
+              <button class="action-btn" data-midi="56" data-iv="P5" data-label="G#3 P5 D#4" onclick="handleAction(this, 56, 'P5')">G#3 P5 D#4</button>
+              <button class="action-btn" data-midi="55" data-iv="P4" data-label="G3 P4 C4" onclick="handleAction(this, 55, 'P4')">G3 P4 C4</button>
+              <button class="action-btn" data-midi="59" data-iv="P4" data-label="B3 P4 E4" onclick="handleAction(this, 59, 'P4')">B3 P4 E4</button>
+              <button class="action-btn" data-midi="56" data-iv="M3" data-label="G#3 M3 C4" onclick="handleAction(this, 56, 'M3')">G#3 M3 C4</button>
+              <button class="action-btn" data-midi="60" data-iv="M3" data-label="C4 M3 E4" onclick="handleAction(this, 60, 'M3')">C4 M3 E4</button>
             </div>
             <div class="guide-result guide-res-wait" id="guideRes8">Awaiting M3 and P4/P5 checks...</div>
           </div>
           <div class="guide-step">
-            <h3>Step 9: P4/P5 Verification</h3>
-            <div class="tuning-target">Verifying Overlaps</div>
+            <h3>Step 9: Overlaps & M6/M3 Tests</h3>
+            <div class="tuning-target">Verifying Architecture</div>
             <div class="action-row">
-              <button class="action-btn" data-midi="53" data-iv="P5" data-label="F3 (P5)" onclick="handleAction(this, 53, 'P5')">F3 (P5)</button>
-              <button class="action-btn" data-midi="60" data-iv="P4" data-label="C4 (P4)" onclick="handleAction(this, 60, 'P4')">C4 (P4)</button>
-              <button class="action-btn" data-midi="54" data-iv="P5" data-label="F#3 (P5)" onclick="handleAction(this, 54, 'P5')">F#3 (P5)</button>
-              <button class="action-btn" data-midi="61" data-iv="P4" data-label="C#4 (P4)" onclick="handleAction(this, 61, 'P4')">C#4 (P4)</button>
+              <button class="action-btn" data-midi="53" data-iv="P5" data-label="F3 P5 C4" onclick="handleAction(this, 53, 'P5')">F3 P5 C4</button>
+              <button class="action-btn" data-midi="60" data-iv="P4" data-label="C4 P4 F4" onclick="handleAction(this, 60, 'P4')">C4 P4 F4</button>
+              <button class="action-btn" data-midi="53" data-iv="M6" data-label="F3 M6 D4" onclick="handleAction(this, 53, 'M6')">F3 M6 D4</button>
+            </div>
+            <div class="action-row">
+              <button class="action-btn" data-midi="54" data-iv="P5" data-label="F#3 P5 C#4" onclick="handleAction(this, 54, 'P5')">F#3 P5 C#4</button>
+              <button class="action-btn" data-midi="61" data-iv="P4" data-label="C#4 P4 F#4" onclick="handleAction(this, 61, 'P4')">C#4 P4 F#4</button>
+              <button class="action-btn" data-midi="54" data-iv="M6" data-label="F#3 M6 D#4" onclick="handleAction(this, 54, 'M6')">F#3 M6 D#4</button>
             </div>
             <div class="guide-result guide-res-wait" id="guideRes9">Awaiting logs...</div>
           </div>
@@ -519,15 +493,15 @@
             <h3>Step 10: Chromatic M3 Sweep</h3>
             <div class="tuning-target">Targeting Refinements</div>
             <div class="action-row">
-              <button class="action-btn" data-midi="53" data-iv="M3" data-label="F3" onclick="handleAction(this, 53, 'M3')">F3</button>
-              <button class="action-btn" data-midi="54" data-iv="M3" data-label="F#3" onclick="handleAction(this, 54, 'M3')">F#3</button>
-              <button class="action-btn" data-midi="55" data-iv="M3" data-label="G3" onclick="handleAction(this, 55, 'M3')">G3</button>
-              <button class="action-btn" data-midi="56" data-iv="M3" data-label="G#3" onclick="handleAction(this, 56, 'M3')">G#3</button>
-              <button class="action-btn" data-midi="57" data-iv="M3" data-label="A3" onclick="handleAction(this, 57, 'M3')">A3</button>
-              <button class="action-btn" data-midi="58" data-iv="M3" data-label="A#3" onclick="handleAction(this, 58, 'M3')">A#3</button>
-              <button class="action-btn" data-midi="59" data-iv="M3" data-label="B3" onclick="handleAction(this, 59, 'M3')">B3</button>
-              <button class="action-btn" data-midi="60" data-iv="M3" data-label="C4" onclick="handleAction(this, 60, 'M3')">C4</button>
-              <button class="action-btn" data-midi="61" data-iv="M3" data-label="C#4" onclick="handleAction(this, 61, 'M3')">C#4</button>
+              <button class="action-btn" data-midi="53" data-iv="M3" data-label="F3 M3 A3" onclick="handleAction(this, 53, 'M3')">F3 M3 A3</button>
+              <button class="action-btn" data-midi="54" data-iv="M3" data-label="F#3 M3 A#3" onclick="handleAction(this, 54, 'M3')">F#3 M3 A#3</button>
+              <button class="action-btn" data-midi="55" data-iv="M3" data-label="G3 M3 B3" onclick="handleAction(this, 55, 'M3')">G3 M3 B3</button>
+              <button class="action-btn" data-midi="56" data-iv="M3" data-label="G#3 M3 C4" onclick="handleAction(this, 56, 'M3')">G#3 M3 C4</button>
+              <button class="action-btn" data-midi="57" data-iv="M3" data-label="A3 M3 C#4" onclick="handleAction(this, 57, 'M3')">A3 M3 C#4</button>
+              <button class="action-btn" data-midi="58" data-iv="M3" data-label="A#3 M3 D4" onclick="handleAction(this, 58, 'M3')">A#3 M3 D4</button>
+              <button class="action-btn" data-midi="59" data-iv="M3" data-label="B3 M3 D#4" onclick="handleAction(this, 59, 'M3')">B3 M3 D#4</button>
+              <button class="action-btn" data-midi="60" data-iv="M3" data-label="C4 M3 E4" onclick="handleAction(this, 60, 'M3')">C4 M3 E4</button>
+              <button class="action-btn" data-midi="61" data-iv="M3" data-label="C#4 M3 F4" onclick="handleAction(this, 61, 'M3')">C#4 M3 F4</button>
             </div>
             <div class="guide-result guide-res-wait" id="guideRes10">Awaiting logs...</div>
           </div>
@@ -612,7 +586,6 @@ async function getBuiltInMicConstraints() {
   return base;
 }
 
-// Global robust Audio initialization / hard reset
 window.startAudioEngine = async function() {
     if (audioCtx) { try { audioCtx.close(); } catch(e) {} audioCtx = null; }
     if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
@@ -644,7 +617,7 @@ window.startAudioEngine = async function() {
 
         src.connect(analyserFull); 
         src.connect(filters[0]); 
-        filters[0].connect(filters[1]); // Dropped the 3rd cascade filter
+        filters[0].connect(filters[1]); 
         filters[1].connect(gainNode); 
         filters[1].connect(monitorGain); 
         monitorGain.connect(audioCtx.destination);
@@ -743,7 +716,6 @@ function getDynamicThresholds(midiNote, ivKey) {
 
 let curIv = 'M3', lowerMidi = 53, rollBaseMidi = 53; 
 let currentOctMode = 'OCT_42';
-// DSP UPDATE: Unified Chunk Size to 512. Fixes aliasing by running at ~86 FPS.
 let audioCtx = null, analyserFull = null, analyserTuner = null, filters = [], tunerFilter = null, gainNode = null, monitorGain = null;
 let isRunning = false, micPaused = false, monitorOn = false, rafId = null, currentChunkSize = 512; 
 let micStream = null, scriptNode = null; 
@@ -854,6 +826,17 @@ window.handleListen = function(btn, midi, ivKey) {
 window.wipeAndTarget = function(midi, ivKey) {
     deleteEntry(ivKey, midi);
     setTarget(midi, ivKey);
+}
+
+// DYNAMIC CLUSTER WIPE: Allows safely clearing an entire bad variable note
+window.wipeCluster = function(targetMidi, targetIv, wipeArray) {
+    wipeArray.forEach(item => {
+        if (loggedIntervals[item.i]) {
+            loggedIntervals[item.i] = loggedIntervals[item.i].filter(e => e.midi !== item.m);
+        }
+    });
+    savePersistence(); renderLogTable(); analyzeTemperament(); updateGuide(); updateDynRes();
+    setTarget(targetMidi, targetIv);
 }
 
 window.sampleIH = function(midi) {
@@ -1100,82 +1083,235 @@ function checkStep5() {
   res.innerHTML = html;
 }
 
+// LIVE STATE MACHINE: Step 6
 function checkStep6() {
   let p5 = getLogVal('P5', 'F#3'), p4_f = getLogVal('P4', 'F3'), p4_a = getLogVal('P4', 'A3'), m3f = getLogVal('M3', 'F#3'), m3a = getLogVal('M3', 'A#3'); 
   let res = $('guideRes6');
-  if(!p5 || !p4_f || !p4_a || !m3f || !m3a) { res.className = 'guide-result guide-res-wait'; res.innerHTML = "Awaiting M3 and P4/P5 cross-checks..."; return; }
-  let html = `F#3(P5): ${p5.toFixed(1)} | F3(P4): ${p4_f.toFixed(1)} | A3(P4): ${p4_a.toFixed(1)}<br>M3s: ${m3f.toFixed(1)} &rarr; ${m3a.toFixed(1)}<br>`;
+
+  let html = '';
+  if (!p5 && !p4_f && !p4_a && !m3f && !m3a) { res.className = 'guide-result guide-res-wait'; res.innerHTML = "Log P5 and P4s to place F#3, A#3, and D4..."; return; }
+
+  let err = false;
+  if (p5) {
+      if (p5 < 0.3 || p5 > 1.0) { html += `<span style="color:#d00000;">F#3 P5: ${p5.toFixed(1)} (Aim 0.3-0.8)</span><br>`; err = true; }
+      else html += `<span style="color:#006600;">F#3 P5: ${p5.toFixed(1)} ✔</span><br>`;
+  }
+  if (p4_f) {
+      if (p4_f < 0.6 || p4_f > 1.4) { html += `<span style="color:#d00000;">F3 P4 (A#3): ${p4_f.toFixed(1)} (Aim 0.6-1.2)</span><br>`; err = true; }
+      else html += `<span style="color:#006600;">F3 P4 (A#3): ${p4_f.toFixed(1)} ✔</span><br>`;
+  }
+  if (p4_a) {
+      if (p4_a < 0.6 || p4_a > 1.4) { html += `<span style="color:#d00000;">A3 P4 (D4): ${p4_a.toFixed(1)} (Aim 0.6-1.2)</span><br>`; err = true; }
+      else html += `<span style="color:#006600;">A3 P4 (D4): ${p4_a.toFixed(1)} ✔</span><br>`;
+  }
+
+  if(!m3f || !m3a) {
+      res.className = err ? 'guide-result guide-res-warn' : 'guide-result guide-res-wait';
+      res.innerHTML = html + "<br><i>Log M3s for jump analysis...</i>";
+      return;
+  }
+
+  html += `<br><b>M3 Jump:</b> ${m3f.toFixed(1)} &rarr; ${m3a.toFixed(1)}<br>`;
   let r1 = ((m3a - m3f) / m3f) * 100;
-  if (p5 > 1.8 || p4_f > 1.8 || p4_a > 1.8) { 
-      res.className = 'guide-result guide-res-warn'; 
-      html += `P4/P5 check failed! Adjust placement.<br><button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeAndTarget(54, 'P5')">FIX F#3 (P5)</button>`; 
-  }
-  else if(Math.abs(r1 - 26) <= 6) { res.className = 'guide-result guide-res-pass'; html += `✔ SKELETON PROPORTIONAL (+${r1.toFixed(0)}%)`; }
-  else { 
-      res.className = 'guide-result guide-res-warn'; 
-      html += `Uneven Jump (+${r1.toFixed(0)}%). A#3 is likely ${r1 > 26 ? 'flat' : 'sharp'}.<br><button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeAndTarget(58, 'M3')">FIX A#3 (M3)</button>`; 
+
+  if(Math.abs(r1 - 26) <= 6 && !err) {
+      res.className = 'guide-result guide-res-pass';
+      html += `✔ SKELETON BALANCED (+${r1.toFixed(0)}%)`;
+  } else {
+      res.className = 'guide-result guide-res-warn';
+      if (r1 > 32) {
+          if (p4_f && p4_f >= 1.1) {
+              html += `A#3 is sharp, but F3 P4 limits it. <b>TRAPPED!</b> Sharpen F#3.<br>`;
+              html += `<button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeCluster(54, 'P5', [{m:54,i:'P5'},{m:54,i:'M3'}])">FIX F#3</button>`;
+          } else {
+              html += `A#3 is sharp. Flatten A#3.<br>`;
+              html += `<button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeCluster(53, 'P4', [{m:53,i:'P4'},{m:54,i:'M3'},{m:58,i:'M3'}])">FIX A#3</button>`;
+          }
+      } else if (r1 < 20) {
+          if (p4_f && p4_f <= 0.6) {
+              html += `A#3 is flat, but F3 P4 limits it. <b>TRAPPED!</b> Flatten F#3.<br>`;
+              html += `<button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeCluster(54, 'P5', [{m:54,i:'P5'},{m:54,i:'M3'}])">FIX F#3</button>`;
+          } else {
+              html += `A#3 is flat. Sharpen A#3.<br>`;
+              html += `<button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeCluster(53, 'P4', [{m:53,i:'P4'},{m:54,i:'M3'},{m:58,i:'M3'}])">FIX A#3</button>`;
+          }
+      } else {
+          html += `M3s OK, but P4/P5 bounds failed. Re-check limits.<br>`;
+          html += `<button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeCluster(54, 'P5', [{m:54,i:'P5'},{m:53,i:'P4'},{m:57,i:'P4'}])">RE-CHECK P4/P5</button>`;
+      }
   }
   res.innerHTML = html;
 }
 
+// LIVE STATE MACHINE: Step 7
 function checkStep7() {
-  let p5 = getLogVal('P5', 'G3'), p4_f = getLogVal('P4', 'F#3'), p4_a = getLogVal('P4', 'A#3'), m3g = getLogVal('M3', 'G3'), m3b = getLogVal('M3', 'B3'); 
+  let p5 = getLogVal('P5', 'G3'), p4_b = getLogVal('P4', 'F#3'), p4_t = getLogVal('P4', 'A#3'), m3_b = getLogVal('M3', 'G3'), m3_t = getLogVal('M3', 'B3'); 
   let res = $('guideRes7');
-  if(!p5 || !p4_f || !p4_a || !m3g || !m3b) { res.className = 'guide-result guide-res-wait'; res.innerHTML = "Awaiting M3 and P4/P5 cross-checks..."; return; }
-  let html = `G3(P5): ${p5.toFixed(1)} | F#3(P4): ${p4_f.toFixed(1)} | A#3(P4): ${p4_a.toFixed(1)}<br>M3s: ${m3g.toFixed(1)} &rarr; ${m3b.toFixed(1)}<br>`;
-  let r1 = ((m3b - m3g) / m3g) * 100;
-  if (p5 > 1.8 || p4_f > 1.8 || p4_a > 1.8) { 
-      res.className = 'guide-result guide-res-warn'; 
-      html += `P4/P5 check failed! Adjust placement.<br><button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeAndTarget(55, 'P5')">FIX G3 (P5)</button>`; 
+
+  let html = '';
+  if (!p5 && !p4_b && !p4_t && !m3_b && !m3_t) { res.className = 'guide-result guide-res-wait'; res.innerHTML = "Log P5 and P4s to place G3, B3, and D#4..."; return; }
+
+  let err = false;
+  if (p5) {
+      if (p5 < 0.3 || p5 > 1.0) { html += `<span style="color:#d00000;">G3 P5: ${p5.toFixed(1)} (Aim 0.3-0.8)</span><br>`; err = true; }
+      else html += `<span style="color:#006600;">G3 P5: ${p5.toFixed(1)} ✔</span><br>`;
   }
-  else if(Math.abs(r1 - 26) <= 6) { res.className = 'guide-result guide-res-pass'; html += `✔ SKELETON PROPORTIONAL (+${r1.toFixed(0)}%)`; }
-  else { 
-      res.className = 'guide-result guide-res-warn'; 
-      html += `Uneven Jump (+${r1.toFixed(0)}%). B3 is likely ${r1 > 26 ? 'flat' : 'sharp'}.<br><button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeAndTarget(59, 'M3')">FIX B3 (M3)</button>`; 
+  if (p4_b) {
+      if (p4_b < 0.6 || p4_b > 1.4) { html += `<span style="color:#d00000;">F#3 P4 (B3): ${p4_b.toFixed(1)} (Aim 0.6-1.2)</span><br>`; err = true; }
+      else html += `<span style="color:#006600;">F#3 P4 (B3): ${p4_b.toFixed(1)} ✔</span><br>`;
+  }
+  if (p4_t) {
+      if (p4_t < 0.6 || p4_t > 1.4) { html += `<span style="color:#d00000;">A#3 P4 (D#4): ${p4_t.toFixed(1)} (Aim 0.6-1.2)</span><br>`; err = true; }
+      else html += `<span style="color:#006600;">A#3 P4 (D#4): ${p4_t.toFixed(1)} ✔</span><br>`;
+  }
+
+  if(!m3_b || !m3_t) {
+      res.className = err ? 'guide-result guide-res-warn' : 'guide-result guide-res-wait';
+      res.innerHTML = html + "<br><i>Log M3s for jump analysis...</i>";
+      return;
+  }
+
+  html += `<br><b>M3 Jump:</b> ${m3_b.toFixed(1)} &rarr; ${m3_t.toFixed(1)}<br>`;
+  let r1 = ((m3_t - m3_b) / m3_b) * 100;
+
+  if(Math.abs(r1 - 26) <= 6 && !err) {
+      res.className = 'guide-result guide-res-pass';
+      html += `✔ SKELETON BALANCED (+${r1.toFixed(0)}%)`;
+  } else {
+      res.className = 'guide-result guide-res-warn';
+      if (r1 > 32) {
+          if (p4_b && p4_b >= 1.1) {
+              html += `B3 is sharp, but F#3 P4 limits it. <b>TRAPPED!</b> Sharpen G3.<br>`;
+              html += `<button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeCluster(55, 'P5', [{m:55,i:'P5'},{m:55,i:'M3'}])">FIX G3</button>`;
+          } else {
+              html += `B3 is sharp. Flatten B3.<br>`;
+              html += `<button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeCluster(54, 'P4', [{m:54,i:'P4'},{m:55,i:'M3'},{m:59,i:'M3'}])">FIX B3</button>`;
+          }
+      } else if (r1 < 20) {
+          if (p4_b && p4_b <= 0.6) {
+              html += `B3 is flat, but F#3 P4 limits it. <b>TRAPPED!</b> Flatten G3.<br>`;
+              html += `<button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeCluster(55, 'P5', [{m:55,i:'P5'},{m:55,i:'M3'}])">FIX G3</button>`;
+          } else {
+              html += `B3 is flat. Sharpen B3.<br>`;
+              html += `<button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeCluster(54, 'P4', [{m:54,i:'P4'},{m:55,i:'M3'},{m:59,i:'M3'}])">FIX B3</button>`;
+          }
+      } else {
+          html += `M3s OK, but P4/P5 bounds failed. Re-check limits.<br>`;
+          html += `<button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeCluster(55, 'P5', [{m:55,i:'P5'},{m:54,i:'P4'},{m:58,i:'P4'}])">RE-CHECK P4/P5</button>`;
+      }
   }
   res.innerHTML = html;
 }
 
+// LIVE STATE MACHINE: Step 8
 function checkStep8() {
-  let p5 = getLogVal('P5', 'G#3'), p4_g = getLogVal('P4', 'G3'), p4_b = getLogVal('P4', 'B3'), m3g = getLogVal('M3', 'G#3'), m3c = getLogVal('M3', 'C4'); 
+  let p5 = getLogVal('P5', 'G#3'), p4_b = getLogVal('P4', 'G3'), p4_t = getLogVal('P4', 'B3'), m3_b = getLogVal('M3', 'G#3'), m3_t = getLogVal('M3', 'C4'); 
   let res = $('guideRes8');
-  if(!p5 || !p4_g || !p4_b || !m3g || !m3c) { res.className = 'guide-result guide-res-wait'; res.innerHTML = "Awaiting M3 and P4/P5 cross-checks..."; return; }
-  let html = `G#3(P5): ${p5.toFixed(1)} | G3(P4): ${p4_g.toFixed(1)} | B3(P4): ${p4_b.toFixed(1)}<br>M3s: ${m3g.toFixed(1)} &rarr; ${m3c.toFixed(1)}<br>`;
-  let r1 = ((m3c - m3g) / m3g) * 100;
-  if (p5 > 1.8 || p4_g > 1.8 || p4_b > 1.8) { 
-      res.className = 'guide-result guide-res-warn'; 
-      html += `P4/P5 check failed! Adjust placement.<br><button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeAndTarget(56, 'P5')">FIX G#3 (P5)</button>`; 
+
+  let html = '';
+  if (!p5 && !p4_b && !p4_t && !m3_b && !m3_t) { res.className = 'guide-result guide-res-wait'; res.innerHTML = "Log P5 and P4s to place G#3, C4, and E4..."; return; }
+
+  let err = false;
+  if (p5) {
+      if (p5 < 0.3 || p5 > 1.0) { html += `<span style="color:#d00000;">G#3 P5: ${p5.toFixed(1)} (Aim 0.3-0.8)</span><br>`; err = true; }
+      else html += `<span style="color:#006600;">G#3 P5: ${p5.toFixed(1)} ✔</span><br>`;
   }
-  else if(Math.abs(r1 - 26) <= 6) { res.className = 'guide-result guide-res-pass'; html += `✔ SKELETON PROPORTIONAL (+${r1.toFixed(0)}%)`; }
-  else { 
-      res.className = 'guide-result guide-res-warn'; 
-      html += `Uneven Jump (+${r1.toFixed(0)}%). C4 is likely ${r1 > 26 ? 'flat' : 'sharp'}.<br><button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeAndTarget(60, 'M3')">FIX C4 (M3)</button>`; 
+  if (p4_b) {
+      if (p4_b < 0.6 || p4_b > 1.4) { html += `<span style="color:#d00000;">G3 P4 (C4): ${p4_b.toFixed(1)} (Aim 0.6-1.2)</span><br>`; err = true; }
+      else html += `<span style="color:#006600;">G3 P4 (C4): ${p4_b.toFixed(1)} ✔</span><br>`;
+  }
+  if (p4_t) {
+      if (p4_t < 0.6 || p4_t > 1.4) { html += `<span style="color:#d00000;">B3 P4 (E4): ${p4_t.toFixed(1)} (Aim 0.6-1.2)</span><br>`; err = true; }
+      else html += `<span style="color:#006600;">B3 P4 (E4): ${p4_t.toFixed(1)} ✔</span><br>`;
+  }
+
+  if(!m3_b || !m3_t) {
+      res.className = err ? 'guide-result guide-res-warn' : 'guide-result guide-res-wait';
+      res.innerHTML = html + "<br><i>Log M3s for jump analysis...</i>";
+      return;
+  }
+
+  html += `<br><b>M3 Jump:</b> ${m3_b.toFixed(1)} &rarr; ${m3_t.toFixed(1)}<br>`;
+  let r1 = ((m3_t - m3_b) / m3_b) * 100;
+
+  if(Math.abs(r1 - 26) <= 6 && !err) {
+      res.className = 'guide-result guide-res-pass';
+      html += `✔ SKELETON BALANCED (+${r1.toFixed(0)}%)`;
+  } else {
+      res.className = 'guide-result guide-res-warn';
+      if (r1 > 32) {
+          if (p4_b && p4_b >= 1.1) {
+              html += `C4 is sharp, but G3 P4 limits it. <b>TRAPPED!</b> Sharpen G#3.<br>`;
+              html += `<button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeCluster(56, 'P5', [{m:56,i:'P5'},{m:56,i:'M3'}])">FIX G#3</button>`;
+          } else {
+              html += `C4 is sharp. Flatten C4.<br>`;
+              html += `<button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeCluster(55, 'P4', [{m:55,i:'P4'},{m:56,i:'M3'},{m:60,i:'M3'}])">FIX C4</button>`;
+          }
+      } else if (r1 < 20) {
+          if (p4_b && p4_b <= 0.6) {
+              html += `C4 is flat, but G3 P4 limits it. <b>TRAPPED!</b> Flatten G#3.<br>`;
+              html += `<button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeCluster(56, 'P5', [{m:56,i:'P5'},{m:56,i:'M3'}])">FIX G#3</button>`;
+          } else {
+              html += `C4 is flat. Sharpen C4.<br>`;
+              html += `<button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeCluster(55, 'P4', [{m:55,i:'P4'},{m:56,i:'M3'},{m:60,i:'M3'}])">FIX C4</button>`;
+          }
+      } else {
+          html += `M3s OK, but P4/P5 bounds failed. Re-check limits.<br>`;
+          html += `<button class="ctrl-btn fix-btn" style="margin-top:4px;" onclick="wipeCluster(56, 'P5', [{m:56,i:'P5'},{m:55,i:'P4'},{m:59,i:'P4'}])">RE-CHECK P4/P5</button>`;
+      }
   }
   res.innerHTML = html;
 }
 
+// STEP 9: M6 AND OVERLAPS
 function checkStep9() {
-  let p5F = getLogVal('P5', 'F3'), p4C = getLogVal('P4', 'C4'), p5Fs = getLogVal('P5', 'F#3'), p4Cs = getLogVal('P4', 'C#4');
+  let p5F = getLogVal('P5', 'F3'), p4C = getLogVal('P4', 'C4'), m6F = getLogVal('M6', 'F3'), m3G = getLogVal('M3', 'G3');
+  let p5Fs = getLogVal('P5', 'F#3'), p4Cs = getLogVal('P4', 'C#4'), m6Fs = getLogVal('M6', 'F#3'), m3Gs = getLogVal('M3', 'G#3');
+
   let res = $('guideRes9');
-  if(!p5F || !p4C || !p5Fs || !p4Cs) { res.className = 'guide-result guide-res-wait'; res.innerHTML = "Awaiting logs..."; return; }
-  let html = `F3-C4: P5=${p5F.toFixed(1)} P4=${p4C.toFixed(1)}<br>F#3-C#4: P5=${p5Fs.toFixed(1)} P4=${p4Cs.toFixed(1)}<br>`;
-  if(p4C > p5F && p4Cs > p5Fs) { res.className = 'guide-result guide-res-pass'; html += `✔ OVERLAPS ARE CORRECT.`; }
-  else { res.className = 'guide-result guide-res-warn'; html += `ERROR: P4 must be faster than P5!`; }
+  let html = '';
+  if(!p5F && !p4C && !m6F) { res.className = 'guide-result guide-res-wait'; res.innerHTML = "Log overlaps and M6 tests..."; return; }
+
+  let err = false;
+  
+  if (p4C && p5F) {
+      if (p4C > p5F) html += `<span style="color:#006600;">F3-C4-F4 overlaps OK ✔</span><br>`;
+      else { html += `<span style="color:#d00000;">ERROR: C4 P4 slower than F3 P5!</span><br>`; err = true; }
+  }
+  if (m6F && m3G) {
+      if (m6F > m3G) html += `<span style="color:#006600;">F3 M6 > G3 M3 OK ✔</span><br>`;
+      else { html += `<span style="color:#d00000;">ERROR: F3 M6 must beat faster than G3 M3!</span><br>`; err = true; }
+  }
+
+  if (p4Cs && p5Fs) {
+      if (p4Cs > p5Fs) html += `<span style="color:#006600;">F#3-C#4-F#4 overlaps OK ✔</span><br>`;
+      else { html += `<span style="color:#d00000;">ERROR: C#4 P4 slower than F#3 P5!</span><br>`; err = true; }
+  }
+  
+  if (html === '') html = "Awaiting verification sets...";
+  res.className = err ? 'guide-result guide-res-warn' : 'guide-result guide-res-pass';
   res.innerHTML = html;
 }
 
+// STRICT HIERARCHY LOGIC: Step 10
 function checkStep10() {
-  let seq = ['F3','F#3','G3','G#3','A3','A#3','B3','C4','C#4']; 
-  let midiSeq = [53, 54, 55, 56, 57, 58, 59, 60, 61];
+  let seq = [
+    {m: 53, n: 'F3'}, {m: 54, n: 'F#3'}, {m: 55, n: 'G3'}, 
+    {m: 56, n: 'G#3'}, {m: 57, n: 'A3'}, {m: 58, n: 'A#3'}, 
+    {m: 59, n: 'B3'}, {m: 60, n: 'C4'}, {m: 61, n: 'C#4'}
+  ];
   let vals = []; let res = $('guideRes10');
+  
   for(let i=0; i<seq.length; i++) { 
-      let v = getLogVal('M3', seq[i]); 
+      let v = getLogVal('M3', seq[i].n); 
       if(!v) { res.className = 'guide-result guide-res-wait'; res.innerHTML = `Awaiting all M3s...`; return; } 
-      vals.push({note: seq[i], midi: midiSeq[i], val: v}); 
+      vals.push({note: seq[i].n, midi: seq[i].m, val: v}); 
   }
+  
   let str = vals.map(v => v.val.toFixed(1)).join(' &rarr; '); 
   let html = `<div style="font-size:0.65rem; margin-bottom:6px;">${str}</div>`;
   let issues = []; 
+  
   for(let i=1; i<vals.length; i++) { 
       if(vals[i].val <= vals[i-1].val) issues.push({low: vals[i-1], high: vals[i]}); 
   }
@@ -1188,9 +1324,18 @@ function checkStep10() {
       let upperNoteMidi = issue.high.midi + 4;
       let upperNoteName = noteName(upperNoteMidi);
       
-      html += `<b style="font-size:0.8rem;">DIP AT ${issue.high.note}:</b> ${issue.low.val.toFixed(1)} &rarr; ${issue.high.val.toFixed(1)}<br>`; 
-      html += `<span style="font-size:0.7rem; color:#444;">Anchors assumed solid. <b>${upperNoteName}</b> is likely FLAT.</span><br>`;
-      html += `<button class="ctrl-btn fix-btn" style="margin-top:6px;" onclick="wipeAndTarget(${issue.high.midi}, 'M3')">FIX ${upperNoteName} (via ${issue.high.note} M3)</button>`;
+      // STRICT ANCHORS F3, A3, C#4, F4
+      let anchors = [53, 57, 61, 65];
+      
+      html += `<b style="font-size:0.8rem;">DIP AT ${issue.high.note} M3:</b> ${issue.low.val.toFixed(1)} &rarr; ${issue.high.val.toFixed(1)}<br>`; 
+      
+      if (anchors.includes(upperNoteMidi)) {
+          html += `<span style="font-size:0.7rem; color:#444;">${upperNoteName} is a STRICT ANCHOR. The bottom note <b>${issue.high.note}</b> is likely SHARP.</span><br>`;
+          html += `<button class="ctrl-btn fix-btn" style="margin-top:6px;" onclick="wipeCluster(${issue.high.midi}, 'M3', [{m:${issue.high.midi},i:'M3'}])">FIX ${issue.high.note}</button>`;
+      } else {
+          html += `<span style="font-size:0.7rem; color:#444;">Anchors assumed solid. <b>${upperNoteName}</b> is likely FLAT.</span><br>`;
+          html += `<button class="ctrl-btn fix-btn" style="margin-top:6px;" onclick="wipeCluster(${issue.high.midi}, 'M3', [{m:${issue.high.midi},i:'M3'}])">FIX ${upperNoteName}</button>`;
+      }
   }
   res.innerHTML = html;
 }
@@ -1216,10 +1361,10 @@ function renderDynExpanders() {
       lBtnsU += `<button class="action-btn listen-btn" onclick="handleListen(this, ${uP8}, 'OCT_21')">2:1</button>`;
       if(uDouble >= 21) lBtnsU += `<button class="action-btn listen-btn" onclick="handleListen(this, ${uDouble}, 'OCT+2')">OCT+2</button>`;
       
-      uBtns += `<button class="action-btn" onclick="handleAction(this, ${uP8}, 'OCT_42')" data-midi="${uP8}" data-iv="OCT_42" data-label="${noteName(uP8)} (OCT)">${noteName(uP8)} (OCT)</button>`;
+      uBtns += `<button class="action-btn" onclick="handleAction(this, ${uP8}, 'OCT_42')" data-midi="${uP8}" data-iv="OCT_42" data-label="${noteName(uP8)} OCT ${noteName(uP8+12)}">${noteName(uP8)} OCT ${noteName(uP8+12)}</button>`;
   }
-  if(uM10 >= 21) uBtns += `<button class="action-btn" onclick="handleAction(this, ${uM10}, 'M10')" data-midi="${uM10}" data-iv="M10" data-label="${noteName(uM10)} (M10)">${noteName(uM10)} (M10)</button>`;
-  if(uM17 >= 21) uBtns += `<button class="action-btn" onclick="handleAction(this, ${uM17}, 'M17')" data-midi="${uM17}" data-iv="M17" data-label="${noteName(uM17)} (M17)">${noteName(uM17)} (M17)</button>`;
+  if(uM10 >= 21) uBtns += `<button class="action-btn" onclick="handleAction(this, ${uM10}, 'M10')" data-midi="${uM10}" data-iv="M10" data-label="${noteName(uM10)} M10 ${noteName(uM10+16)}">${noteName(uM10)} M10 ${noteName(uM10+16)}</button>`;
+  if(uM17 >= 21) uBtns += `<button class="action-btn" onclick="handleAction(this, ${uM17}, 'M17')" data-midi="${uM17}" data-iv="M17" data-label="${noteName(uM17)} M17 ${noteName(uM17+28)}">${noteName(uM17)} M17 ${noteName(uM17+28)}</button>`;
   
   $('dynUpListenBtns').innerHTML = lBtnsU;
   $('dynUpBtns').innerHTML = uBtns;
@@ -1233,10 +1378,10 @@ function renderDynExpanders() {
       lBtnsD += `<button class="action-btn listen-btn" onclick="handleListen(this, ${expDownMidi}, 'OCT_21')">2:1</button>`;
       if(expDownMidi + 24 <= 108) lBtnsD += `<button class="action-btn listen-btn" onclick="handleListen(this, ${expDownMidi}, 'OCT+2')">OCT+2</button>`;
       
-      dBtns += `<button class="action-btn" onclick="handleAction(this, ${expDownMidi}, 'OCT_42')" data-midi="${expDownMidi}" data-iv="OCT_42" data-label="${noteName(expDownMidi)} (OCT)">${noteName(expDownMidi)} (OCT)</button>`;
+      dBtns += `<button class="action-btn" onclick="handleAction(this, ${expDownMidi}, 'OCT_42')" data-midi="${expDownMidi}" data-iv="OCT_42" data-label="${noteName(expDownMidi)} OCT ${noteName(expDownMidi+12)}">${noteName(expDownMidi)} OCT ${noteName(expDownMidi+12)}</button>`;
   }
-  if(expDownMidi + 16 <= 108) dBtns += `<button class="action-btn" onclick="handleAction(this, ${expDownMidi}, 'M10')" data-midi="${expDownMidi}" data-iv="M10" data-label="${noteName(expDownMidi)} (M10)">${noteName(expDownMidi)} (M10)</button>`;
-  if(expDownMidi + 28 <= 108) dBtns += `<button class="action-btn" onclick="handleAction(this, ${expDownMidi}, 'M17')" data-midi="${expDownMidi}" data-iv="M17" data-label="${noteName(expDownMidi)} (M17)">${noteName(expDownMidi)} (M17)</button>`;
+  if(expDownMidi + 16 <= 108) dBtns += `<button class="action-btn" onclick="handleAction(this, ${expDownMidi}, 'M10')" data-midi="${expDownMidi}" data-iv="M10" data-label="${noteName(expDownMidi)} M10 ${noteName(expDownMidi+16)}">${noteName(expDownMidi)} M10 ${noteName(expDownMidi+16)}</button>`;
+  if(expDownMidi + 28 <= 108) dBtns += `<button class="action-btn" onclick="handleAction(this, ${expDownMidi}, 'M17')" data-midi="${expDownMidi}" data-iv="M17" data-label="${noteName(expDownMidi)} M17 ${noteName(expDownMidi+28)}">${noteName(expDownMidi)} M17 ${noteName(expDownMidi+28)}</button>`;
   
   $('dynDownListenBtns').innerHTML = lBtnsD;
   $('dynDownBtns').innerHTML = dBtns;
@@ -1396,7 +1541,6 @@ function buildAudioProcessor() {
       for (let i = 0; i < limit; i++) sum += inputData[offset + i] * inputData[offset + i];
       const rms = Math.sqrt(sum / limit); 
       
-      // DSP UPDATE: Adapted Exponential Moving Average for 86 fps to keep it smooth
       smoothedEnvelope = (smoothedEnvelope * 0.7) + (rms * 0.3);
       envelopeRunning = smoothedEnvelope;
       
@@ -1419,7 +1563,6 @@ function buildAudioProcessor() {
       else { 
           envHistory.push({ val: envelopeRunning }); 
           const fps = audioCtx.sampleRate / currentChunkSize; 
-          // DSP UPDATE: Expand memory buffer dynamically up to 4.5 seconds for messy notes
           if (envHistory.length > Math.round(4.5 * fps)) envHistory.shift(); 
       }
     }
@@ -1456,15 +1599,12 @@ function renderLoop(ts) {
   if (snr > threshold.snr && envelopeRunning > threshold.env) { sigLight.style.background = '#00ff00'; } else { sigLight.style.background = '#e0e0e0'; }
   let now = performance.now(); const fps = audioCtx.sampleRate / currentChunkSize; 
   
-  // Dynamic Start Time: 0.5s for all to gather a solid baseline
   let minHistFrames = Math.round(fps * 0.5);
 
   if (captureState === 'WAIT' && now - captureStartTime > 800) { captureState = 'CAPTURING'; $('captureStateLbl').textContent = 'RECORDING...'; $('captureStateLbl').style.color = '#d00000'; }
   if (captureState === 'CAPTURING') {
       if (envHistory.length >= minHistFrames && snr > threshold.snr && envelopeRunning > threshold.env) { let beat = detectBeat(envHistory, cfg.theoBeat, curIv); if (beat !== null) capturedBeats.push(beat); }
       
-      // DSP UPDATE: Dynamic expanding timeout window. Clean notes can lock fast. 
-      // Messy notes (treble/break) are given up to 4.5 seconds to reveal their beat.
       let maxWaitTime = lowerMidi >= 58 ? 4500 : 3300;
       
       if (now - captureStartTime > maxWaitTime || snr < threshold.snr * 0.8) {
@@ -1494,7 +1634,6 @@ function detectBeat(history, theoreticalBeat, ivKey) {
 
   if (ac0 < 1e-12) return null;
 
-  // DSP UPDATE: With 86 fps, we can safely detect up to ~43 bps without aliasing.
   const minLag = Math.max(2, Math.round(fps / 55)), maxLag = Math.min(N - 2, Math.round(fps / 0.5)); 
   const ac = new Float32Array(maxLag + 1); for (let lag = minLag; lag <= maxLag; lag++) { let sum = 0; for (let i = 0; i < N - lag; i++) sum += AC[i] * AC[i + lag]; ac[lag] = sum / ac0; }
   const peaks = []; 
