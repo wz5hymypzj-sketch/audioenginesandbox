@@ -19,7 +19,7 @@
   }
 </script>
 
-<title>DAN'S BEAT SPEED DETECTOR - V40</title>
+<title>DAN'S BEAT SPEED DETECTOR - V41</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -486,15 +486,36 @@
             <h3>Step 11: Final P4/P5 Polish</h3>
             <div class="tuning-target">Bulletproof The Temperament</div>
             <p style="font-size:0.7rem; color:#666; margin-bottom:8px;">All P4s and P5s should beat slowly. Ensure all are logged to unlock the Grader.</p>
-            <div class="action-row" id="finalPolishBtns">
-               </div>
-            <div class="guide-result guide-res-wait" id="guideRes11">Awaiting logs...</div>
+            
+            <div style="font-size: 0.75rem; font-weight: 800; color: #000; text-align: left; margin-bottom: 2px;">P4 Sweep:</div>
+            <div class="action-row" style="margin-bottom: 8px;">
+              <button class="action-btn" data-midi="53" data-iv="P4" data-label="F3 P4 A#3" onclick="handleAction(this, 53, 'P4')">F3 P4 A#3</button>
+              <button class="action-btn" data-midi="54" data-iv="P4" data-label="F#3 P4 B3" onclick="handleAction(this, 54, 'P4')">F#3 P4 B3</button>
+              <button class="action-btn" data-midi="55" data-iv="P4" data-label="G3 P4 C4" onclick="handleAction(this, 55, 'P4')">G3 P4 C4</button>
+              <button class="action-btn" data-midi="56" data-iv="P4" data-label="G#3 P4 C#4" onclick="handleAction(this, 56, 'P4')">G#3 P4 C#4</button>
+              <button class="action-btn" data-midi="57" data-iv="P4" data-label="A3 P4 D4" onclick="handleAction(this, 57, 'P4')">A3 P4 D4</button>
+              <button class="action-btn" data-midi="58" data-iv="P4" data-label="A#3 P4 D#4" onclick="handleAction(this, 58, 'P4')">A#3 P4 D#4</button>
+              <button class="action-btn" data-midi="59" data-iv="P4" data-label="B3 P4 E4" onclick="handleAction(this, 59, 'P4')">B3 P4 E4</button>
+              <button class="action-btn" data-midi="60" data-iv="P4" data-label="C4 P4 F4" onclick="handleAction(this, 60, 'P4')">C4 P4 F4</button>
+            </div>
+            
+            <div style="font-size: 0.75rem; font-weight: 800; color: #000; text-align: left; margin-bottom: 2px;">P5 Sweep:</div>
+            <div class="action-row">
+              <button class="action-btn" data-midi="53" data-iv="P5" data-label="F3 P5 C4" onclick="handleAction(this, 53, 'P5')">F3 P5 C4</button>
+              <button class="action-btn" data-midi="54" data-iv="P5" data-label="F#3 P5 C#4" onclick="handleAction(this, 54, 'P5')">F#3 P5 C#4</button>
+              <button class="action-btn" data-midi="55" data-iv="P5" data-label="G3 P5 D4" onclick="handleAction(this, 55, 'P5')">G3 P5 D4</button>
+              <button class="action-btn" data-midi="56" data-iv="P5" data-label="G#3 P5 D#4" onclick="handleAction(this, 56, 'P5')">G#3 P5 D#4</button>
+              <button class="action-btn" data-midi="57" data-iv="P5" data-label="A3 P5 E4" onclick="handleAction(this, 57, 'P5')">A3 P5 E4</button>
+              <button class="action-btn" data-midi="58" data-iv="P5" data-label="A#3 P5 F4" onclick="handleAction(this, 58, 'P5')">A#3 P5 F4</button>
+            </div>
+
+            <div class="guide-result guide-res-wait" id="guideRes11" style="margin-top: 6px;">Awaiting logs...</div>
           </div>
           <div class="guide-step" style="background: #fdfdfd; border-color: #000; padding-bottom:12px;">
             <h3 style="background:#000; color:#fff;">Step 12: Temperament Grader</h3>
             <div class="tuning-target" style="margin-bottom:8px;">The Auto-Debugger</div>
             <p style="font-size:0.7rem; color:#444; margin-bottom:12px;">Matrixes all M3s, M6s, 4ths and 5ths to find conflicting pieces of the puzzle and guides you to the safest compromises.</p>
-            <button class="ctrl-btn grade-btn" onclick="checkStep12()">ANALYZE TEMPERAMENT</button>
+            <button class="ctrl-btn grade-btn" onclick="runGrader()">ANALYZE TEMPERAMENT</button>
             <div id="guideRes12"></div>
           </div>
         </div>
@@ -731,6 +752,7 @@ let expUpMidi = 66;
 let expDownMidi = 52; 
 let sweepMidi = 41; 
 let sweepIvType = 'M3';
+let isGraderActive = false; // State variable for Auto-Debugger
 
 const $ = id => document.getElementById(id);
 const avgEl = $('avgVal'), sigLight = $('signalLight');
@@ -1008,7 +1030,13 @@ function updateActionButtons() {
   });
 }
 
-function updateGuide() { checkStep2(); checkStep3(); checkStep4(); checkStep5(); checkStep6(); checkStep7(); checkStep8(); checkStep9(); checkStep10(); checkStep11(); updateActionButtons(); }
+function updateGuide() { 
+    checkStep2(); checkStep3(); checkStep4(); checkStep5(); 
+    checkStep6(); checkStep7(); checkStep8(); checkStep9(); 
+    checkStep10(); checkStep11(); 
+    if(isGraderActive) window.checkStep12(); 
+    updateActionButtons(); 
+}
 
 function checkStep2() {
   let m3 = getLogVal('M3', 'F3'), m10 = getLogVal('M10', 'F3'); let res = $('guideRes2');
@@ -1235,21 +1263,6 @@ function checkStep11() {
         {m:60, i:'P4', n:'C4 P4 F4'}
     ];
     
-    let btnContainer = $('finalPolishBtns');
-    if (!btnContainer.hasChildNodes()) {
-        pList.forEach(item => {
-            let b = document.createElement('button');
-            b.className = 'action-btn';
-            b.dataset.midi = item.m;
-            b.dataset.iv = item.i;
-            b.dataset.label = item.n;
-            b.innerHTML = item.n;
-            b.onclick = function() { handleAction(this, item.m, item.i); };
-            btnContainer.appendChild(b);
-        });
-        updateActionButtons();
-    }
-    
     let res = $('guideRes11');
     let badCount = 0; let loggedCount = 0; let msg = '';
     
@@ -1267,83 +1280,96 @@ function checkStep11() {
     else { res.className = 'guide-result guide-res-warn'; res.innerHTML = `<span style="color:#d00000;">WARNING: HOWLING INTERVALS FOUND</span><br><br>${msg}<i>Use Auto-Debugger to distribute the error safely.</i>`; }
 }
 
-window.checkStep12 = function() {
+window.runGrader = function() {
+    isGraderActive = true;
     let res = $('guideRes12');
     res.innerHTML = '<div style="text-align:center; padding: 10px;">Analyzing Temperament Matrix...</div>';
+    setTimeout(window.checkStep12, 400);
+}
+
+window.checkStep12 = function() {
+    let res = $('guideRes12');
+    let errors = [];
+    let missingLogs = false;
     
-    setTimeout(() => {
-        let errors = [];
+    let seqM3 = [53, 54, 55, 56, 57, 58, 59, 60, 61];
+    for(let i=1; i<seqM3.length; i++) {
+        let vPrev = getLogVal('M3', noteName(seqM3[i-1]));
+        let vCur = getLogVal('M3', noteName(seqM3[i]));
         
-        let seqM3 = [53, 54, 55, 56, 57, 58, 59, 60, 61];
-        for(let i=1; i<seqM3.length; i++) {
-            let vPrev = getLogVal('M3', noteName(seqM3[i-1]));
-            let vCur = getLogVal('M3', noteName(seqM3[i]));
-            if (vPrev && vCur && vCur <= vPrev) {
-                let culprit = seqM3[i] + 4; 
-                let reason = `Widen ${noteName(seqM3[i])} M3`;
-                let fixDir = 'SHARPEN';
-                
-                let p4_to_top = getLogVal('P4', noteName(culprit - 5));
-                if (p4_to_top && p4_to_top > 1.2) {
-                    culprit = seqM3[i]; 
-                    reason = `Narrow ${noteName(seqM3[i])} M3 (Top note trapped)`;
-                    fixDir = 'FLATTEN';
-                }
-                
-                errors.push({ note: culprit, dir: fixDir, reason: reason, 
-                              cluster: [{m:seqM3[i], i:'M3'}, {m:culprit-5, i:'P4'}, {m:culprit-7, i:'P5'}] });
+        if (vPrev === null || vCur === null) missingLogs = true;
+
+        if (vPrev && vCur && vCur <= vPrev) {
+            let culprit = seqM3[i] + 4; 
+            let reason = `Widen ${noteName(seqM3[i])} M3`;
+            let fixDir = 'SHARPEN';
+            
+            let p4_to_top = getLogVal('P4', noteName(culprit - 5));
+            if (p4_to_top && p4_to_top > 1.2) {
+                culprit = seqM3[i]; 
+                reason = `Narrow ${noteName(seqM3[i])} M3 (Top note trapped)`;
+                fixDir = 'FLATTEN';
             }
+            
+            errors.push({ note: culprit, dir: fixDir, reason: reason, 
+                          cluster: [{m:seqM3[i], i:'M3'}, {m:culprit-5, i:'P4'}, {m:culprit-7, i:'P5'}] });
         }
+    }
 
-        let pList = [
-            {m:53, i:'P4'}, {m:53, i:'P5'}, {m:54, i:'P4'}, {m:54, i:'P5'},
-            {m:55, i:'P4'}, {m:55, i:'P5'}, {m:56, i:'P4'}, {m:56, i:'P5'},
-            {m:57, i:'P4'}, {m:57, i:'P5'}, {m:58, i:'P4'}, {m:58, i:'P5'}
-        ];
-        
-        pList.forEach(item => {
-            let val = getLogVal(item.i, noteName(item.m));
-            if (val && val > 1.4) {
-                let topNote = item.m + IV[item.i].sem;
-                errors.push({
-                    note: topNote, dir: item.i === 'P4' ? 'FLATTEN' : 'SHARPEN', 
-                    reason: `Slow down howling ${noteName(item.m)} ${item.i}`,
-                    cluster: [{m:item.m, i:item.i}, {m:topNote-4, i:'M3'}]
-                });
-            }
-        });
+    let pList = [
+        {m:53, i:'P4'}, {m:53, i:'P5'}, {m:54, i:'P4'}, {m:54, i:'P5'},
+        {m:55, i:'P4'}, {m:55, i:'P5'}, {m:56, i:'P4'}, {m:56, i:'P5'},
+        {m:57, i:'P4'}, {m:57, i:'P5'}, {m:58, i:'P4'}, {m:58, i:'P5'}
+    ];
+    
+    pList.forEach(item => {
+        let val = getLogVal(item.i, noteName(item.m));
+        if (val === null) missingLogs = true;
 
-        if (errors.length === 0) {
-            res.innerHTML = `<div class="guide-result guide-res-pass">✔ TEMPERAMENT PASSED!<br>No structural knots found. The jigsaw fits!</div>`;
-            return;
-        }
-
-        let uniqueErrors = {};
-        errors.forEach(e => {
-            if(!uniqueErrors[e.note]) uniqueErrors[e.note] = { dir: e.dir, reasons: [], cluster: [] };
-            if(!uniqueErrors[e.note].reasons.includes(e.reason)) uniqueErrors[e.note].reasons.push(e.reason);
-            e.cluster.forEach(c => {
-                if(!uniqueErrors[e.note].cluster.some(x => x.m === c.m && x.i === c.i)) uniqueErrors[e.note].cluster.push(c);
+        if (val && val > 1.4) {
+            let topNote = item.m + IV[item.i].sem;
+            errors.push({
+                note: topNote, dir: item.i === 'P4' ? 'FLATTEN' : 'SHARPEN', 
+                reason: `Slow down howling ${noteName(item.m)} ${item.i}`,
+                cluster: [{m:item.m, i:item.i}, {m:topNote-4, i:'M3'}]
             });
-        });
+        }
+    });
 
-        let html = '';
-        Object.keys(uniqueErrors).forEach(noteMidi => {
-            let e = uniqueErrors[noteMidi];
-            let cStr = JSON.stringify(e.cluster);
-            html += `
-            <div class="grade-card">
-                <div class="grade-title">⚠️ Fix ${noteName(noteMidi)}</div>
-                <div class="grade-desc">
-                    <b>Action:</b> ${e.dir} ${noteName(noteMidi)}.<br>
-                    <b>Why:</b> ${e.reasons.join(' AND ')}.<br>
-                </div>
-                <button class="action-btn" style="width:100%; border-color:#d00000; color:#d00000;" onclick='wipeCluster(${noteMidi}, "M3", ${cStr})'>RE-TUNE CLUSTER & VERIFY</button>
-            </div>`;
+    if (errors.length === 0) {
+        if (missingLogs) {
+            res.innerHTML = `<div class="guide-result guide-res-wait">Re-log missing intervals to update Grader...</div>`;
+        } else {
+            res.innerHTML = `<div class="guide-result guide-res-pass">✔ TEMPERAMENT PASSED!<br>No structural knots found. The jigsaw fits!</div>`;
+        }
+        return;
+    }
+
+    let uniqueErrors = {};
+    errors.forEach(e => {
+        if(!uniqueErrors[e.note]) uniqueErrors[e.note] = { dir: e.dir, reasons: [], cluster: [] };
+        if(!uniqueErrors[e.note].reasons.includes(e.reason)) uniqueErrors[e.note].reasons.push(e.reason);
+        e.cluster.forEach(c => {
+            if(!uniqueErrors[e.note].cluster.some(x => x.m === c.m && x.i === c.i)) uniqueErrors[e.note].cluster.push(c);
         });
-        
-        res.innerHTML = html;
-    }, 400); 
+    });
+
+    let html = '';
+    Object.keys(uniqueErrors).forEach(noteMidi => {
+        let e = uniqueErrors[noteMidi];
+        let cStr = JSON.stringify(e.cluster);
+        html += `
+        <div class="grade-card">
+            <div class="grade-title">⚠️ Fix ${noteName(noteMidi)}</div>
+            <div class="grade-desc">
+                <b>Action:</b> ${e.dir} ${noteName(noteMidi)}.<br>
+                <b>Why:</b> ${e.reasons.join(' AND ')}.<br>
+            </div>
+            <button class="action-btn" style="width:100%; border-color:#d00000; color:#d00000;" onclick='wipeCluster(${noteMidi}, "M3", ${cStr})'>RE-TUNE CLUSTER & VERIFY</button>
+        </div>`;
+    });
+    
+    res.innerHTML = html;
 }
 
 // --- DYNAMIC EXPANDERS ---
@@ -1625,6 +1651,7 @@ function renderLoop(ts) {
               let stableCount = capturedBeats.filter(b => Math.abs(b - median) < 0.6).length;
               if (stableCount / capturedBeats.length >= 0.7 || median === 0.0) {
                   lockedAverage = median; avgEl.textContent = lockedAverage.toFixed(2);
+                  setBeatDesc(lockedAverage);
                   $('captureStateLbl').textContent = 'LOCKED!'; $('captureStateLbl').style.color = '#00aa00'; captureState = 'LOCKED'; finalizeLog(); 
               } else { captureState = 'IDLE'; $('captureStateLbl').textContent = 'UNSTABLE'; $('captureStateLbl').style.color = '#d00000'; setTimeout(() => { if(!micPaused && captureState==='IDLE') resetCapture(); }, 1500); }
           } else { captureState = 'IDLE'; $('captureStateLbl').textContent = 'NO BEAT'; $('captureStateLbl').style.color = '#d00000'; setTimeout(() => { if(!micPaused && captureState==='IDLE') resetCapture(); }, 1500); }
