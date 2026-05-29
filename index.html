@@ -667,7 +667,9 @@ function getConfig(lowerMidi, ivKey) {
   const fLo = freq(lowerMidi), fHi = freq(upperMidi);
   const pLo = iv.lp * fLo, pHi = iv.up * fHi;
   const center = (pLo + pHi) / 2; const theoBeat = Math.abs(iv.up * fHi - iv.lp * fLo);
-  let margin = Math.max(22, theoBeat * 1.2 + 8);
+  
+  // Widen the base margin by 20% to help catch shifted partials due to inharmonicity
+  let margin = Math.max(22, theoBeat * 1.2 + 8) * 1.20; 
   if (ivKey === 'M10' || ivKey === 'M17') margin *= 1.8; 
   if (lowerMidi < 40) margin *= 1.4; 
   return { lowerMidi, upperMidi, fLo, fHi, pLo, pHi, center, theoBeat, bpLo: center - margin, bpHi: center + margin, iv, ivKey };
@@ -747,7 +749,7 @@ function switchMainMode(mode) {
     $('btnModeGuide').classList.add('active');
     $('guideContainer').style.display = 'flex';
     updateGuide(); renderDynExpanders(); renderSweep();
-  }
+  } 
 }
 
 function switchGuideTab(tab) {
@@ -1668,17 +1670,17 @@ function renderLoop(ts) {
           }
       }
       
-      let strictTimer;
-      if (cfg.theoBeat > 6.0) { strictTimer = 1500; }
-      else if (cfg.theoBeat >= 3.0) { strictTimer = 3000; }
-      else { strictTimer = 4500; }
+      let strictTimer, minBeatsRequired;
+      if (cfg.theoBeat > 6.0) { strictTimer = 1500; minBeatsRequired = 5; }
+      else if (cfg.theoBeat >= 3.0) { strictTimer = 3000; minBeatsRequired = 4; }
+      else { strictTimer = 4500; minBeatsRequired = 3; }
 
       let timeElapsed = now - captureStartTime;
       let isTimerUp = timeElapsed > strictTimer;
-      let isSignalDead = snr < threshold.snr * 0.4; 
+      let isSignalDead = snr < threshold.snr * 0.3; 
 
       if (isTimerUp || (timeElapsed > 1500 && isSignalDead)) {
-          if (capturedBeats.length >= 3) {
+          if (capturedBeats.length >= minBeatsRequired) {
               capturedBeats.sort((a,b) => a-b); 
               let median = capturedBeats[Math.floor(capturedBeats.length/2)];
               let stableCount = capturedBeats.filter(b => Math.abs(b - median) <= 0.6).length;
@@ -1707,7 +1709,7 @@ function detectBeat(history, theoreticalBeat, ivKey) {
   let ac0 = 0; for (let i = 0; i < N; i++) ac0 += AC[i] * AC[i]; 
 
   let beatIntensity = Math.sqrt(ac0 / N) / valAvg;
-  if (beatIntensity < 0.015 && valAvg > 0.005) return 0.0; 
+  if (beatIntensity < 0.012 && valAvg > 0.005) return 0.0; 
 
   if (ac0 < 1e-12) return null;
 
