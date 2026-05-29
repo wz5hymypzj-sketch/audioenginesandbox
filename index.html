@@ -1580,15 +1580,23 @@ function renderLoop(ts) {
           }
       }
       
-      let maxWaitTime = 4000;
-      if (cfg.theoBeat > 6) { maxWaitTime = 1500; } 
-      else if (cfg.theoBeat > 3) { maxWaitTime = 2500; }
+      let confidentLock = false;
+      if (capturedBeats.length >= 5) {
+          let sortedTemp = [...capturedBeats].sort((a, b) => a - b);
+          let tempMedian = sortedTemp[Math.floor(sortedTemp.length / 2)];
+          let stableCount = capturedBeats.filter(b => Math.abs(b - tempMedian) < 0.6).length;
+          if (stableCount >= 5 && (stableCount / capturedBeats.length) >= 0.75) {
+              confidentLock = true;
+          }
+      }
+
+      let maxWaitTime = 4500;
       
-      if (now - captureStartTime > maxWaitTime || snr < threshold.snr * 0.8) {
-          if (capturedBeats.length > 5) {
+      if (confidentLock || now - captureStartTime > maxWaitTime || snr < threshold.snr * 0.8) {
+          if (capturedBeats.length > 3) {
               capturedBeats.sort((a,b) => a-b); let median = capturedBeats[Math.floor(capturedBeats.length/2)];
               let stableCount = capturedBeats.filter(b => Math.abs(b - median) < 0.6).length;
-              if (stableCount / capturedBeats.length >= 0.7 || median === 0.0) {
+              if (stableCount / capturedBeats.length >= 0.6 || median === 0.0) {
                   lockedAverage = median; avgEl.textContent = lockedAverage.toFixed(2);
                   $('captureStateLbl').textContent = 'LOCKED!'; $('captureStateLbl').style.color = '#00aa00'; captureState = 'LOCKED'; finalizeLog(); 
               } else { captureState = 'IDLE'; $('captureStateLbl').textContent = 'UNSTABLE'; $('captureStateLbl').style.color = '#d00000'; setTimeout(() => { if(!micPaused && captureState==='IDLE') resetCapture(); }, 1500); }
