@@ -19,7 +19,7 @@
   }
 </script>
 
-<title>DAN'S BEAT SPEED DETECTOR - V32</title>
+<title>DAN'S BEAT SPEED DETECTOR - V33</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -642,9 +642,14 @@ window.startAudioEngine = async function() {
         monitorGain = audioCtx.createGain(); monitorGain.gain.value = monitorOn && !micPaused ? 25.0 : 0.0;
         scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
 
-        src.connect(analyserFull); src.connect(filters[0]); filters[0].connect(filters[1]); filters[1].connect(filters[2]); 
-        filters[2].connect(gainNode); filters[2].connect(monitorGain); monitorGain.connect(audioCtx.destination);
-        gainNode.connect(scriptNode); scriptNode.connect(audioCtx.destination);
+        src.connect(analyserFull); 
+        src.connect(filters[0]); 
+        filters[0].connect(filters[1]); // Dropped the 3rd cascade filter
+        filters[1].connect(gainNode); 
+        filters[1].connect(monitorGain); 
+        monitorGain.connect(audioCtx.destination);
+        gainNode.connect(scriptNode); 
+        scriptNode.connect(audioCtx.destination);
 
         scriptNode.onaudioprocess = buildAudioProcessor();
         isRunning = true; 
@@ -720,29 +725,28 @@ function getConfig(lowerMidi, ivKey) {
   return { lowerMidi, upperMidi, fLo, fHi, pLo, pHi, center, theoBeat, bpLo: center - margin, bpHi: center + margin, iv, ivKey };
 }
 
-// DSP UPDATE: The Forgiveness Curve for the "Break" region (MIDI 58-65)
+// DSP UPDATE: Unified Envelope thresholds & Stratified forgiveness
 function getDynamicThresholds(midiNote, ivKey) {
-  let minEnv = 0.003, minSnr = 2.5;   
+  let minEnv = 0.002, minSnr = 2.0;   
   if (midiNote > 60) {
     let boostFactor = Math.min(1, (midiNote - 60) / 36); 
-    minEnv = 0.003 - (boostFactor * 0.0025); minSnr = 2.5 - (boostFactor * 1.5);      
+    minEnv = 0.002 - (boostFactor * 0.0015); minSnr = 2.0 - (boostFactor * 1.0);      
   }
   
-  // Specific leniency for the Break/Strut Region (A#3 to F4)
-  if (midiNote >= 58 && midiNote <= 65) {
-      minEnv *= 0.6;
-      minSnr *= 0.6;
+  // Specific leniency for the Break/Strut Region & Treble
+  if (midiNote >= 58) {
+      minEnv *= 0.5;
+      minSnr *= 0.5;
   }
 
   if (ivKey === 'P4' || ivKey === 'P5' || ivKey.includes('OCT')) { minSnr *= 0.75; minEnv *= 0.8; }
-  minEnv *= 0.15; minSnr *= 0.5;  
   return { env: Math.max(0.0001, minEnv), snr: Math.max(1.0, minSnr) };
 }
 
 let curIv = 'M3', lowerMidi = 53, rollBaseMidi = 53; 
 let currentOctMode = 'OCT_42';
 let audioCtx = null, analyserFull = null, analyserTuner = null, filters = [], tunerFilter = null, gainNode = null, monitorGain = null;
-let isRunning = false, micPaused = false, monitorOn = false, rafId = null, currentChunkSize = 1024;
+let isRunning = false, micPaused = false, monitorOn = false, rafId = null, currentChunkSize = 1024; // UNIFIED CHUNK SIZE
 let micStream = null, scriptNode = null; 
 let noiseFloor = 0.001, envelopeRunning = 0, lastEnvelope = 0, envHistory = [];    
 let transientSamplesLeft = 0, lastAttackTime = 0;
@@ -947,7 +951,7 @@ function buildPianoRoll() {
     key.className = 'pk' + (isSharp ? ' sh' : ''); key.dataset.midi = m;
     if (m >= ivDef.min && m <= ivDef.max) {
       key.textContent = noteName(m);
-      key.addEventListener('click', () => { lowerMidi = m; currentChunkSize = (lowerMidi > 60) ? 256 : 1024; resetCapture(); refreshUI(); });
+      key.addEventListener('click', () => { lowerMidi = m; currentChunkSize = 1024; resetCapture(); refreshUI(); });
     } else { key.classList.add('disabled'); if (!isSharp) key.textContent = noteName(m); }
     roll.appendChild(key);
   }
@@ -969,8 +973,8 @@ function refreshUI() {
 
 $('octDown').addEventListener('click', () => { if (rollBaseMidi > 12) { rollBaseMidi -= 12; buildPianoRoll(); } });
 $('octUp').addEventListener('click', () => { if (rollBaseMidi < 108) { rollBaseMidi += 12; buildPianoRoll(); } });
-$('btnBigDown').addEventListener('click', () => { if (!isRunning || lowerMidi <= IV[curIv].min) return; lowerMidi--; updateRollBounds(); currentChunkSize = (lowerMidi > 60) ? 256 : 1024; resetCapture(); buildPianoRoll(); });
-$('btnBigUp').addEventListener('click', () => { if (!isRunning || lowerMidi >= IV[curIv].max) return; lowerMidi++; updateRollBounds(); currentChunkSize = (lowerMidi > 60) ? 256 : 1024; resetCapture(); buildPianoRoll(); });
+$('btnBigDown').addEventListener('click', () => { if (!isRunning || lowerMidi <= IV[curIv].min) return; lowerMidi--; updateRollBounds(); currentChunkSize = 1024; resetCapture(); buildPianoRoll(); });
+$('btnBigUp').addEventListener('click', () => { if (!isRunning || lowerMidi >= IV[curIv].max) return; lowerMidi++; updateRollBounds(); currentChunkSize = 1024; resetCapture(); buildPianoRoll(); });
 window.addEventListener('keydown', (e) => { if (!isRunning) return; if (e.key === 'ArrowRight') { e.preventDefault(); $('btnBigUp').click(); } else if (e.key === 'ArrowLeft') { e.preventDefault(); $('btnBigDown').click(); } });
 
 function finalizeLog() {
@@ -1355,6 +1359,8 @@ $('bigStartBtn').addEventListener('click', async () => {
   await startAudioEngine();
 });
 
+let smoothedEnvelope = 0; // The new low-pass volume tracker
+
 function buildAudioProcessor() {
   return (e) => {
     if (!isRunning || micPaused) return;
@@ -1362,17 +1368,23 @@ function buildAudioProcessor() {
     for (let offset = 0; offset < inputData.length; offset += currentChunkSize) {
       let sum = 0, limit = Math.min(currentChunkSize, inputData.length - offset);
       for (let i = 0; i < limit; i++) sum += inputData[offset + i] * inputData[offset + i];
-      const rms = Math.sqrt(sum / limit); envelopeRunning = rms;
-      const strikeMult = currentChunkSize === 256 ? 1.8 : 2.5;
+      const rms = Math.sqrt(sum / limit); 
+      
+      // DSP UPDATE: Low-pass Envelope filter to kill transient noise/false chatter
+      smoothedEnvelope = (smoothedEnvelope * 0.4) + (rms * 0.6);
+      envelopeRunning = smoothedEnvelope;
+      
+      const strikeMult = 2.0; 
       const isStrike = (envelopeRunning > lastEnvelope * strikeMult) && (envelopeRunning > 0.005);
       lastEnvelope = envelopeRunning;
       noiseFloor = noiseFloor * 0.996 + Math.min(envelopeRunning, noiseFloor * 1.5) * 0.004;
       if (noiseFloor < 0.000001) noiseFloor = 0.000001;
       const snr = envelopeRunning / noiseFloor;
-      if (isStrike && snr > 3.0) {
+      
+      if (isStrike && snr > 2.5) {
         const timeNow = performance.now();
         if (timeNow - lastAttackTime > 400 && (captureState === 'IDLE' || captureState === 'LOCKED')) {
-          envHistory = []; lastAttackTime = timeNow; transientSamplesLeft = currentChunkSize === 256 ? 72 : 18;
+          envHistory = []; lastAttackTime = timeNow; transientSamplesLeft = 12; // Wait a fraction longer before collecting cleanly
           captureState = 'WAIT'; captureStartTime = timeNow; capturedBeats = [];
           $('captureStateLbl').textContent = 'WAITING...'; $('captureStateLbl').style.color = '#ff9900';
         }
@@ -1384,16 +1396,19 @@ function buildAudioProcessor() {
 }
 
 function buildFilters(cfg) {
-  const Q = (cfg.center / (cfg.bpHi - cfg.bpLo)) * 1.4;
+  // DSP UPDATE: Widen the filter mathematically by reducing the multiplier
+  const Q = (cfg.center / (cfg.bpHi - cfg.bpLo)) * 0.75;
   const f1 = audioCtx.createBiquadFilter(); f1.type = 'bandpass'; f1.frequency.value = cfg.center; f1.Q.value = Q;
   const f2 = audioCtx.createBiquadFilter(); f2.type = 'bandpass'; f2.frequency.value = cfg.center; f2.Q.value = Q;
-  const f3 = audioCtx.createBiquadFilter(); f3.type = 'bandpass'; f3.frequency.value = cfg.center; f3.Q.value = Q;
-  return [f1, f2, f3];
+  // Reduced from 3 to 2 cascades to prevent tight ringing
+  return [f1, f2];
 }
+
 function retuneFilters(cfg) {
   if (!audioCtx || filters.length === 0) return;
-  const Q = (cfg.center / (cfg.bpHi - cfg.bpLo)) * 1.4;
-  filters[0].frequency.value = cfg.center; filters[0].Q.value = Q; filters[1].frequency.value = cfg.center; filters[1].Q.value = Q; filters[2].frequency.value = cfg.center; filters[2].Q.value = Q;
+  const Q = (cfg.center / (cfg.bpHi - cfg.bpLo)) * 0.75;
+  filters[0].frequency.value = cfg.center; filters[0].Q.value = Q; 
+  filters[1].frequency.value = cfg.center; filters[1].Q.value = Q; 
 }
 
 function renderLoop(ts) {
@@ -1402,20 +1417,18 @@ function renderLoop(ts) {
   if (captureState === 'LISTEN_ONLY') {
       $('captureStateLbl').textContent = 'LISTENING'; 
       $('captureStateLbl').style.color = '#0066ff';
-      // Flash the signal light standard green based on general volume
       const snr = envelopeRunning / noiseFloor;
       if (snr > 1.5 && envelopeRunning > 0.0005) sigLight.style.background = '#00ff00'; 
       else sigLight.style.background = '#e0e0e0';
-      return; // Suspend all auto-logging logic
+      return; 
   }
 
   const cfg = getConfig(lowerMidi, curIv); const snr = envelopeRunning / noiseFloor; const threshold = getDynamicThresholds(lowerMidi, curIv);
   if (snr > threshold.snr && envelopeRunning > threshold.env) { sigLight.style.background = '#00ff00'; } else { sigLight.style.background = '#e0e0e0'; }
   let now = performance.now(); const fps = audioCtx.sampleRate / currentChunkSize; 
   
-  // DSP UPDATE: Faster lock for Break Region
   let minHistFrames = Math.round(fps * 0.4);
-  if (lowerMidi >= 58 && lowerMidi <= 65) { minHistFrames = Math.round(fps * 0.25); }
+  if (lowerMidi >= 58) { minHistFrames = Math.round(fps * 0.25); }
 
   if (captureState === 'WAIT' && now - captureStartTime > 800) { captureState = 'CAPTURING'; $('captureStateLbl').textContent = 'RECORDING...'; $('captureStateLbl').style.color = '#d00000'; }
   if (captureState === 'CAPTURING') {
@@ -1450,11 +1463,11 @@ function detectBeat(history, theoreticalBeat, ivKey) {
   const minLag = Math.max(2, Math.round(fps / 55)), maxLag = Math.min(N - 2, Math.round(fps / 0.5)); 
   const ac = new Float32Array(maxLag + 1); for (let lag = minLag; lag <= maxLag; lag++) { let sum = 0; for (let i = 0; i < N - lag; i++) sum += AC[i] * AC[i + lag]; ac[lag] = sum / ac0; }
   const peaks = []; 
-  let acThreshold = theoreticalBeat > 10.0 ? 0.015 : 0.03; 
-  if (ivKey === 'P4' || ivKey === 'P5' || ivKey.includes('OCT')) acThreshold = 0.01; 
   
-  // DSP UPDATE: Relax Autocorrelation strictness in Break Region
-  if (lowerMidi >= 58 && lowerMidi <= 65) { acThreshold *= 0.6; }
+  // DSP UPDATE: Adjust threshold for the newly smoothed envelope
+  let acThreshold = theoreticalBeat > 10.0 ? 0.01 : 0.02; 
+  if (ivKey === 'P4' || ivKey === 'P5' || ivKey.includes('OCT')) acThreshold = 0.005; 
+  if (lowerMidi >= 58) { acThreshold *= 0.5; } 
   
   for (let lag = minLag + 1; lag < maxLag; lag++) { 
       if (ac[lag] > ac[lag - 1] && ac[lag] > ac[lag + 1] && ac[lag] > acThreshold) peaks.push({ lag, ac: ac[lag] }); 
