@@ -19,7 +19,7 @@
   }
 </script>
 
-<title>DAN'S BEAT SPEED DETECTOR - V38</title>
+<title>DAN'S BEAT SPEED DETECTOR - V40</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -40,7 +40,6 @@
     text-shadow: 4px 4px 0 #000, -4px -4px 0 #000, 4px -4px 0 #000, -4px 4px 0 #000,
                  4px 0px 0 #000, -4px 0px 0 #000, 0px 4px 0 #000, 0px -4px 0 #000;
   }
-  /* BUG FIX: Restored the black text-shadow so the white text is visible against the white background */
   #bigStartBtn {
     background: transparent; color: #ffffff; font-size: 2.2rem; font-weight: 900; font-style: italic;
     padding: 12px 36px; border: 4px solid #000000; border-radius: 8px; cursor: pointer; text-transform: uppercase;
@@ -120,9 +119,7 @@
   }
   .val-large { font-size: 2.8rem; font-weight: 900; line-height: 1.1; letter-spacing: -0.02em; }
   .val-lbl { font-size: 0.85rem; text-transform: uppercase; font-weight: 900; color: #000; margin-top: 2px; }
-  
-  /* BUG FIX: Placed the textbook BPS and Description statically beneath the main readout */
-  .textbook-bps { font-size: 0.75rem; font-weight: 800; color: #0066ff; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .textbook-bps { font-size: 0.75rem; font-weight: 800; color: #666; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
   
   #signalLight {
     position: absolute; top: 10px; left: 10px; width: 12px; height: 12px;
@@ -130,11 +127,17 @@
   }
   #captureStateLbl { position: absolute; top: 10px; right: 10px; font-size: 0.7rem; font-weight: 900; color: #666; text-transform: uppercase; }
 
-  /* BUG FIX: Added min-height: 0 to all flex containers to ensure overflow-y actually scrolls instead of stretching */
-  .workspace { flex: 1 1 0; min-height: 0; overflow: hidden; border: 1px solid #000; border-radius: 4px 4px 0 0; border-bottom: none; background: #ffffff; display: flex; flex-direction: column; }
-  #logContainer, #ihContainer { width: 100%; height: 100%; overflow-y: auto; }
-  #guideContainer { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; overflow: hidden; display: none; flex-direction: column; }
-  .guide-pane { display: none; padding: 8px; flex-direction: column; gap: 8px; background: #f9f9f9; flex: 1 1 0; min-height: 0; overflow-y: auto; }
+  /* STRICT FLEXBOX BOUNDARIES TO PREVENT SCROLL BLOWOUT */
+  .layout-wrapper { display: flex; flex-direction: column; width: 100%; flex: 1; min-height: 0; overflow: hidden; }
+  .left-panel { display: flex; flex-direction: column; flex-shrink: 0; }
+  .right-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+  
+  .workspace { flex: 1; min-height: 0; overflow: hidden; border: 1px solid #000; border-radius: 4px 4px 0 0; border-bottom: none; background: #ffffff; display: flex; flex-direction: column; }
+  
+  #logContainer, #ihContainer { flex: 1; min-height: 0; width: 100%; overflow-y: auto; }
+  #guideContainer { flex: 1; min-height: 0; width: 100%; overflow: hidden; display: none; flex-direction: column; }
+  
+  .guide-pane { flex: 1; min-height: 0; display: none; padding: 8px; flex-direction: column; gap: 8px; background: #f9f9f9; overflow-y: auto; }
   .guide-pane.active { display: flex; }
 
   table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.75rem; table-layout: fixed; }
@@ -144,6 +147,8 @@
   .w { color: #555; font-weight: 600; }
   .btn-del { background: transparent; border: 1px solid #d00000; color: #d00000; border-radius: 4px; font-weight: bold; cursor: pointer; padding: 2px 6px; font-size: 0.7rem; }
   .btn-del:active { background: #d00000; color: #fff; }
+
+  #analysisBox { background: #fff8f8; border: 1px solid #000; border-top: 2px solid #000; padding: 6px 8px; flex-shrink: 0; margin-bottom: 4px; }
 
   /* Guide Styles */
   .guide-tabs { display: flex; border-bottom: 2px solid #000; background: #f0f0f0; flex-shrink: 0; z-index: 5; }
@@ -233,12 +238,12 @@
     .left-panel .roll-nav { height: auto; }
 
     .left-panel .dual-readout { flex: 0 0 110px; }
-    .left-panel .readout-box { height: 100%; padding: 4px; }
+    .left-panel .readout-box { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; border-width: 3px; padding: 4px; }
     .left-panel .val-large    { font-size: clamp(2.6rem, 10vh, 4.5rem); line-height: 1; }
     .left-panel .val-lbl      { font-size: clamp(0.75rem, 2vh, 0.95rem); margin-top: 4px; }
     .left-panel .textbook-bps { font-size: clamp(0.7rem, 1.8vh, 0.9rem); }
 
-    .right-panel { flex: 45; height: 100%; }
+    .right-panel { flex: 45; height: 100%; display: flex; flex-direction: column; min-height: 0; }
   }
 </style>
 <script>
@@ -326,7 +331,7 @@
         <div id="captureStateLbl">IDLE</div>
         <div class="val-large" id="avgVal">—</div>
         <div class="val-lbl">AVERAGE BPS</div>
-        <div class="textbook-bps" id="lblTarget">TARGET: ~—</div>
+        <div class="textbook-bps" id="lblTarget">~—</div>
       </div>
     </div>
   </div>
@@ -936,8 +941,7 @@ function refreshUI() {
   $('lblInterval').textContent = `${noteName(cfg.lowerMidi)} - ${noteName(cfg.upperMidi)}`;
   $('coincidentPartial').textContent = `${cfg.iv.lp}x / ${cfg.iv.up}x ≈ ${cfg.center.toFixed(1)} Hz`;
   
-  // BUG FIX: Set the descriptive text rigidly to the target BPS and placed below the readout.
-  $('lblTarget').textContent = `TARGET: ~${cfg.theoBeat.toFixed(2)} bps (${getBeatDesc(cfg.theoBeat)})`;
+  $('lblTarget').textContent = `~${cfg.theoBeat.toFixed(2)} (${getBeatDesc(cfg.theoBeat)})`;
   
   retuneFilters(cfg);
 }
