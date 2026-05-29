@@ -973,15 +973,26 @@ function renderLogTable() {
   if (entries.length > 0) {
     entries.sort((a, b) => a.midi - b.midi);
     for (let i = 0; i < entries.length; i++) {
+      entries[i].pctStr = '-'; entries[i].isWrong = false; entries[i].isWarn = false;
       if (i > 0) {
         const pct = ((entries[i].measured - entries[i-1].measured) / entries[i-1].measured) * 100;
-        entries[i].pctStr = (pct > 0 ? '+' : '') + pct.toFixed(1) + '%'; entries[i].isWrong = (pct <= 0);
-      } else { entries[i].pctStr = '-'; entries[i].isWrong = false; }
+        entries[i].pctStr = (pct > 0 ? '+' : '') + pct.toFixed(1) + '%';
+        
+        // Traffic Light Logic: Only warn/error on purely consecutive semitone jumps
+        if (entries[i].midi === entries[i-1].midi + 1) {
+            if (pct <= 0) {
+                entries[i].isWrong = true; // RED (Dip)
+            } else if (pct < 3 || pct > 9) {
+                entries[i].isWarn = true; // YELLOW (Flatline or Spike)
+            }
+        }
+      }
     }
     tb.innerHTML += `<tr style="background:#f4f4f4; border-bottom:1px solid #000;"><td colspan="6" style="text-align:center; font-weight:800; font-size:0.8rem; padding:4px;">${curIv} PROGRESSION</td></tr>`;
     for (let i = entries.length - 1; i >= 0; i--) {
       const c = entries[i];
-      const rowStyle = c.isWrong ? 'background-color: #ffeaea; color: #d00000; font-weight: 700;' : '';
+      const rowStyle = c.isWrong ? 'background-color: #ffeaea; color: #d00000; font-weight: 700;' : 
+                       (c.isWarn ? 'background-color: #fff8cc; color: #b38000; font-weight: 700;' : '');
       const strikeCountStr = c.strikes.length > 1 ? ` <span style="font-size:0.6rem; color:#666;">(${c.strikes.length}x)</span>` : '';
       tb.innerHTML += `<tr style="${rowStyle}"><td><b>${curIv}</b></td><td style="font-weight:800;">${c.noteName}</td><td style="font-weight:700; font-size:0.85rem;">${c.measured.toFixed(2)}${strikeCountStr}</td><td style="font-weight:700;">${c.pctStr}</td><td class="w">~${c.target.toFixed(2)}</td><td><button class="btn-del" onclick="deleteEntry('${curIv}', ${c.midi})">X</button></td></tr>`;
     }
@@ -1232,7 +1243,10 @@ function checkStep9() {
   let issues = []; 
   
   for(let i=1; i<vals.length; i++) { 
-      if(vals[i].val <= vals[i-1].val) issues.push({low: vals[i-1], high: vals[i]}); 
+      let pct = ((vals[i].val - vals[i-1].val) / vals[i-1].val) * 100;
+      if (pct <= 0) issues.push({type: 'DIP', low: vals[i-1], high: vals[i], pct: pct}); 
+      else if (pct < 3) issues.push({type: 'FLATLINE', low: vals[i-1], high: vals[i], pct: pct});
+      else if (pct > 9) issues.push({type: 'SPIKE', low: vals[i-1], high: vals[i], pct: pct});
   }
   
   if(issues.length === 0) { 
@@ -1240,7 +1254,11 @@ function checkStep9() {
   } else { 
       res.className = 'guide-result guide-res-warn'; 
       let issue = issues[0];
-      html += `<b style="font-size:0.8rem;">DIP AT ${issue.high.note} M3:</b> ${issue.low.val.toFixed(1)} &rarr; ${issue.high.val.toFixed(1)}<br>`; 
+      if (issue.type === 'DIP') {
+          html += `<b style="font-size:0.8rem; color:#d00000;">DIP AT ${issue.high.note}:</b> ${issue.low.val.toFixed(1)} &rarr; ${issue.high.val.toFixed(1)}<br>`; 
+      } else {
+          html += `<b style="font-size:0.8rem; color:#b38000;">${issue.type} AT ${issue.high.note}:</b> ${issue.pct>0?'+':''}${issue.pct.toFixed(1)}%<br>`; 
+      }
       html += `<span style="font-size:0.7rem; color:#444;">Run Auto-Debugger to diagnose exact pin.</span>`;
   }
   res.innerHTML = html;
@@ -1261,7 +1279,10 @@ function checkStep10() {
   let issues = []; 
   
   for(let i=1; i<vals.length; i++) { 
-      if(vals[i].val <= vals[i-1].val) issues.push({low: vals[i-1], high: vals[i]}); 
+      let pct = ((vals[i].val - vals[i-1].val) / vals[i-1].val) * 100;
+      if (pct <= 0) issues.push({type: 'DIP', low: vals[i-1], high: vals[i], pct: pct}); 
+      else if (pct < 3) issues.push({type: 'FLATLINE', low: vals[i-1], high: vals[i], pct: pct});
+      else if (pct > 9) issues.push({type: 'SPIKE', low: vals[i-1], high: vals[i], pct: pct});
   }
   
   if(issues.length === 0) { 
@@ -1269,7 +1290,11 @@ function checkStep10() {
   } else { 
       res.className = 'guide-result guide-res-warn'; 
       let issue = issues[0];
-      html += `<b style="font-size:0.8rem;">DIP AT ${issue.high.note} M6:</b> ${issue.low.val.toFixed(1)} &rarr; ${issue.high.val.toFixed(1)}<br>`; 
+      if (issue.type === 'DIP') {
+          html += `<b style="font-size:0.8rem; color:#d00000;">DIP AT ${issue.high.note}:</b> ${issue.low.val.toFixed(1)} &rarr; ${issue.high.val.toFixed(1)}<br>`; 
+      } else {
+          html += `<b style="font-size:0.8rem; color:#b38000;">${issue.type} AT ${issue.high.note}:</b> ${issue.pct>0?'+':''}${issue.pct.toFixed(1)}%<br>`; 
+      }
       html += `<span style="font-size:0.7rem; color:#444;">Run Auto-Debugger to diagnose exact pin.</span>`;
   }
   res.innerHTML = html;
@@ -1330,20 +1355,40 @@ window.checkStep12 = function() {
         for(let i=1; i<seqM3.length; i++) {
             let vPrev = getLogVal('M3', noteName(seqM3[i-1]));
             let vCur = getLogVal('M3', noteName(seqM3[i]));
-            if (vPrev && vCur && vCur <= vPrev) {
-                let culprit = seqM3[i] + 4; 
-                let reason = `Widen ${noteName(seqM3[i])} M3`;
-                let fixDir = 'SHARPEN';
+            if (vPrev && vCur) {
+                let pct = ((vCur - vPrev) / vPrev) * 100;
                 
-                let p4_to_top = getLogVal('P4', noteName(culprit - 5));
-                if (p4_to_top && p4_to_top > 1.2) {
-                    culprit = seqM3[i]; 
-                    reason = `Narrow ${noteName(seqM3[i])} M3 (Top note trapped)`;
-                    fixDir = 'FLATTEN';
+                if (pct <= 0) {
+                    let culprit = seqM3[i] + 4; 
+                    let reason = `Widen ${noteName(seqM3[i])} M3 (DIP)`;
+                    let fixDir = 'SHARPEN';
+                    
+                    let p4_to_top = getLogVal('P4', noteName(culprit - 5));
+                    if (p4_to_top && p4_to_top > 1.2) {
+                        culprit = seqM3[i]; 
+                        reason = `Narrow ${noteName(seqM3[i])} M3 (Top Trapped)`;
+                        fixDir = 'FLATTEN';
+                    }
+                    errors.push({ note: culprit, dir: fixDir, reason: reason, cluster: [{m:seqM3[i], i:'M3'}, {m:culprit-5, i:'P4'}, {m:culprit-7, i:'P5'}] });
+                } else if (pct > 9) {
+                    let topNote = seqM3[i] + 4;
+                    let bottomNote = seqM3[i];
+                    let top_p4 = getLogVal('P4', noteName(topNote - 5)); 
+                    if (top_p4 && top_p4 > 1.2) {
+                        errors.push({ note: topNote, dir: 'FLATTEN', reason: `Smooth out M3 SPIKE and quiet fast P4`, cluster: [{m:seqM3[i], i:'M3'}, {m:topNote-5, i:'P4'}] });
+                    } else {
+                        errors.push({ note: bottomNote, dir: 'SHARPEN', reason: `Smooth out M3 SPIKE`, cluster: [{m:seqM3[i], i:'M3'}] });
+                    }
+                } else if (pct > 0 && pct < 3) {
+                    let topNote = seqM3[i] + 4;
+                    let bottomNote = seqM3[i];
+                    let top_p4 = getLogVal('P4', noteName(topNote - 5)); 
+                    if (top_p4 && top_p4 < 0.6) {
+                        errors.push({ note: topNote, dir: 'SHARPEN', reason: `Fix M3 FLATLINE and speed up slow P4`, cluster: [{m:seqM3[i], i:'M3'}, {m:topNote-5, i:'P4'}] });
+                    } else {
+                        errors.push({ note: bottomNote, dir: 'FLATTEN', reason: `Fix M3 FLATLINE`, cluster: [{m:seqM3[i], i:'M3'}] });
+                    }
                 }
-                
-                errors.push({ note: culprit, dir: fixDir, reason: reason, 
-                              cluster: [{m:seqM3[i], i:'M3'}, {m:culprit-5, i:'P4'}, {m:culprit-7, i:'P5'}] });
             }
         }
 
@@ -1670,9 +1715,9 @@ function renderLoop(ts) {
       }
       
       let strictTimer, minBeatsRequired;
-      if (cfg.theoBeat > 6.0) { strictTimer = 2500; minBeatsRequired = 6; }
-      else if (cfg.theoBeat >= 3.0) { strictTimer = 4000; minBeatsRequired = 4; }
-      else { strictTimer = 5500; minBeatsRequired = 3; }
+      if (cfg.theoBeat > 6.0) { strictTimer = 1500; minBeatsRequired = 5; }
+      else if (cfg.theoBeat >= 3.0) { strictTimer = 3000; minBeatsRequired = 4; }
+      else { strictTimer = 4500; minBeatsRequired = 3; }
 
       let timeElapsed = now - captureStartTime;
       let isTimerUp = timeElapsed > strictTimer;
