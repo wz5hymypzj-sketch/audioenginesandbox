@@ -134,7 +134,7 @@
   
   .workspace { flex: 1; min-height: 0; overflow: hidden; border: 1px solid #000; border-radius: 4px 4px 0 0; border-bottom: none; background: #ffffff; display: flex; flex-direction: column; }
   
-  #logContainer { flex: 1; min-height: 0; width: 100%; overflow-y: auto; }
+  #logContainer, #ihContainer { flex: 1; min-height: 0; width: 100%; overflow-y: auto; }
   #guideContainer { flex: 1; min-height: 0; width: 100%; overflow: hidden; display: none; flex-direction: column; }
   
   .guide-pane { flex: 1; min-height: 0; display: none; padding: 8px; flex-direction: column; gap: 8px; background: #f9f9f9; overflow-y: auto; }
@@ -291,6 +291,7 @@
       <div class="controls-row">
         <button class="mode-btn active" id="btnModeDet" onclick="switchMainMode('DET')">LOGS</button>
         <button class="mode-btn" id="btnModeGuide" onclick="switchMainMode('GUIDE')">GUIDE</button>
+        <button class="mode-btn" id="btnModeIH" onclick="switchMainMode('IH')">iH</button>
         <button class="mode-btn active" id="btnPause">MIC: ON</button>
         <button class="mode-btn" id="btnPassThrough">PASS: OFF</button>
       </div>
@@ -350,6 +351,22 @@
         <div id="analysisBox" style="display: none;"></div>
       </div>
 
+      <div id="ihContainer" style="display: none;">
+        <div style="padding: 8px;">
+            <h3 style="font-size: 0.85rem; text-transform: uppercase; margin-bottom: 8px; border-bottom: 2px solid #000; padding-bottom: 4px;">Inharmonicity Profiler</h3>
+            <p style="font-size: 0.75rem; margin-bottom: 12px; color: #555;">Measure reference notes across the keyboard to map this piano's specific stiffness (iH). This data will eventually generate a custom stretch curve.</p>
+            <div class="action-row" style="justify-content: flex-start; gap: 8px;" id="ihBtns">
+                <button class="action-btn" onclick="sampleIH(24)" id="ihBtn-24">C1</button>
+                <button class="action-btn" onclick="sampleIH(36)" id="ihBtn-36">C2</button>
+                <button class="action-btn" onclick="sampleIH(48)" id="ihBtn-48">C3</button>
+                <button class="action-btn" onclick="sampleIH(60)" id="ihBtn-60">C4</button>
+                <button class="action-btn" onclick="sampleIH(72)" id="ihBtn-72">C5</button>
+                <button class="action-btn" onclick="sampleIH(84)" id="ihBtn-84">C6</button>
+            </div>
+            <div class="guide-result guide-res-wait" id="ihResult" style="margin-top: 12px;">Select a note to sample its pitch...</div>
+        </div>
+      </div>
+
       <div id="guideContainer">
         <div class="guide-tabs">
           <button class="gt-btn active" onclick="switchGuideTab('TEMP')">TEMP</button>
@@ -369,9 +386,9 @@
             <h3>Step 2: Prove A3 Octave</h3>
             <div class="tuning-target">Tuning: A3</div>
             <div class="action-row">
-              <button class="action-btn listen-btn" onclick="handleListen(this, 57, 'OCT_21')">2:1</button>
               <button class="action-btn listen-btn" onclick="handleListen(this, 57, 'OCT_42')">4:2</button>
               <button class="action-btn listen-btn" onclick="handleListen(this, 57, 'OCT_63')">6:3</button>
+              <button class="action-btn listen-btn" onclick="handleListen(this, 57, 'OCT_21')">2:1</button>
             </div>
             <div class="action-row">
               <button class="action-btn" data-midi="53" data-iv="M3" data-label="F3 M3 A3" onclick="handleAction(this, 53, 'M3')">F3 M3 A3</button>
@@ -390,9 +407,7 @@
             <h3>Step 4: Prove F4 Octave</h3>
             <div class="tuning-target">Tuning: F4</div>
             <div class="action-row">
-              <button class="action-btn listen-btn" onclick="handleListen(this, 53, 'OCT_21')">2:1</button>
               <button class="action-btn listen-btn" onclick="handleListen(this, 53, 'OCT_42')">4:2</button>
-              <button class="action-btn listen-btn" onclick="handleListen(this, 53, 'OCT_63')">6:3</button>
             </div>
             <div class="action-row">
               <button class="action-btn" data-midi="49" data-iv="M3" data-label="C#3 M3 F3" onclick="handleAction(this, 49, 'M3')">C#3 M3 F3</button>
@@ -411,32 +426,32 @@
             <div class="guide-result guide-res-wait" id="guideRes5">Awaiting logs...</div>
           </div>
           <div class="guide-step">
-            <h3>Step 6: Tune A#3, D#4, G#3</h3>
-            <div class="tuning-target">Tuning from F3</div>
+            <h3>Step 6: 'F#' Skeleton</h3>
+            <div class="tuning-target">Tuning: F#3, A#3</div>
             <div class="action-row">
+              <button class="action-btn" data-midi="54" data-iv="P5" data-label="F#3 P5 C#4" onclick="handleAction(this, 54, 'P5')">F#3 P5 C#4</button>
               <button class="action-btn" data-midi="53" data-iv="P4" data-label="F3 P4 A#3" onclick="handleAction(this, 53, 'P4')">F3 P4 A#3</button>
-              <button class="action-btn" data-midi="58" data-iv="P4" data-label="A#3 P4 D#4" onclick="handleAction(this, 58, 'P4')">A#3 P4 D#4</button>
-              <button class="action-btn" data-midi="56" data-iv="P5" data-label="G#3 P5 D#4" onclick="handleAction(this, 56, 'P5')">G#3 P5 D#4</button>
+              <button class="action-btn" data-midi="54" data-iv="M3" data-label="F#3 M3 A#3" onclick="handleAction(this, 54, 'M3')">F#3 M3 A#3</button>
             </div>
             <div class="guide-result guide-res-wait" id="guideRes6">Awaiting logs...</div>
           </div>
           <div class="guide-step">
-            <h3>Step 7: Tune F#3, B3, E4</h3>
-            <div class="tuning-target">Tuning from C#4</div>
+            <h3>Step 7: 'G' Skeleton</h3>
+            <div class="tuning-target">Tuning: G3, B3</div>
             <div class="action-row">
-              <button class="action-btn" data-midi="54" data-iv="P5" data-label="F#3 P5 C#4" onclick="handleAction(this, 54, 'P5')">F#3 P5 C#4</button>
+              <button class="action-btn" data-midi="55" data-iv="P5" data-label="G3 P5 D4" onclick="handleAction(this, 55, 'P5')">G3 P5 D4</button>
               <button class="action-btn" data-midi="54" data-iv="P4" data-label="F#3 P4 B3" onclick="handleAction(this, 54, 'P4')">F#3 P4 B3</button>
-              <button class="action-btn" data-midi="59" data-iv="P4" data-label="B3 P4 E4" onclick="handleAction(this, 59, 'P4')">B3 P4 E4</button>
+              <button class="action-btn" data-midi="55" data-iv="M3" data-label="G3 M3 B3" onclick="handleAction(this, 55, 'M3')">G3 M3 B3</button>
             </div>
             <div class="guide-result guide-res-wait" id="guideRes7">Awaiting logs...</div>
           </div>
           <div class="guide-step">
-            <h3>Step 8: Tune D4, G3, C4</h3>
-            <div class="tuning-target">Tuning from A3</div>
+            <h3>Step 8: 'G#' Skeleton</h3>
+            <div class="tuning-target">Tuning: G#3, C4</div>
             <div class="action-row">
-              <button class="action-btn" data-midi="57" data-iv="P4" data-label="A3 P4 D4" onclick="handleAction(this, 57, 'P4')">A3 P4 D4</button>
-              <button class="action-btn" data-midi="55" data-iv="P5" data-label="G3 P5 D4" onclick="handleAction(this, 55, 'P5')">G3 P5 D4</button>
+              <button class="action-btn" data-midi="56" data-iv="P5" data-label="G#3 P5 D#4" onclick="handleAction(this, 56, 'P5')">G#3 P5 D#4</button>
               <button class="action-btn" data-midi="55" data-iv="P4" data-label="G3 P4 C4" onclick="handleAction(this, 55, 'P4')">G3 P4 C4</button>
+              <button class="action-btn" data-midi="56" data-iv="M3" data-label="G#3 M3 C4" onclick="handleAction(this, 56, 'M3')">G#3 M3 C4</button>
             </div>
             <div class="guide-result guide-res-wait" id="guideRes8">Awaiting logs...</div>
           </div>
@@ -470,23 +485,9 @@
           <div class="guide-step">
             <h3>Step 11: Final P4/P5 Polish</h3>
             <div class="tuning-target">Bulletproof The Temperament</div>
-            <p style="font-size:0.7rem; color:#666; margin-bottom:8px;">All P4s and P5s should beat slowly. Log intervals to unlock Grader.</p>
+            <p style="font-size:0.7rem; color:#666; margin-bottom:8px;">All P4s and P5s should beat slowly. Ensure all are logged to unlock the Grader.</p>
             <div class="action-row" id="finalPolishBtns">
-              <button class="action-btn" data-midi="53" data-iv="P4" data-label="F3 P4 A#3" onclick="handleAction(this, 53, 'P4')">F3 P4 A#3</button>
-              <button class="action-btn" data-midi="53" data-iv="P5" data-label="F3 P5 C4" onclick="handleAction(this, 53, 'P5')">F3 P5 C4</button>
-              <button class="action-btn" data-midi="54" data-iv="P4" data-label="F#3 P4 B3" onclick="handleAction(this, 54, 'P4')">F#3 P4 B3</button>
-              <button class="action-btn" data-midi="54" data-iv="P5" data-label="F#3 P5 C#4" onclick="handleAction(this, 54, 'P5')">F#3 P5 C#4</button>
-              <button class="action-btn" data-midi="55" data-iv="P4" data-label="G3 P4 C4" onclick="handleAction(this, 55, 'P4')">G3 P4 C4</button>
-              <button class="action-btn" data-midi="55" data-iv="P5" data-label="G3 P5 D4" onclick="handleAction(this, 55, 'P5')">G3 P5 D4</button>
-              <button class="action-btn" data-midi="56" data-iv="P4" data-label="G#3 P4 C#4" onclick="handleAction(this, 56, 'P4')">G#3 P4 C#4</button>
-              <button class="action-btn" data-midi="56" data-iv="P5" data-label="G#3 P5 D#4" onclick="handleAction(this, 56, 'P5')">G#3 P5 D#4</button>
-              <button class="action-btn" data-midi="57" data-iv="P4" data-label="A3 P4 D4" onclick="handleAction(this, 57, 'P4')">A3 P4 D4</button>
-              <button class="action-btn" data-midi="57" data-iv="P5" data-label="A3 P5 E4" onclick="handleAction(this, 57, 'P5')">A3 P5 E4</button>
-              <button class="action-btn" data-midi="58" data-iv="P4" data-label="A#3 P4 D#4" onclick="handleAction(this, 58, 'P4')">A#3 P4 D#4</button>
-              <button class="action-btn" data-midi="58" data-iv="P5" data-label="A#3 P5 F4" onclick="handleAction(this, 58, 'P5')">A#3 P5 F4</button>
-              <button class="action-btn" data-midi="59" data-iv="P4" data-label="B3 P4 E4" onclick="handleAction(this, 59, 'P4')">B3 P4 E4</button>
-              <button class="action-btn" data-midi="60" data-iv="P4" data-label="C4 P4 F4" onclick="handleAction(this, 60, 'P4')">C4 P4 F4</button>
-            </div>
+               </div>
             <div class="guide-result guide-res-wait" id="guideRes11">Awaiting logs...</div>
           </div>
           <div class="guide-step" style="background: #fdfdfd; border-color: #000; padding-bottom:12px;">
@@ -755,6 +756,7 @@ function switchMainMode(mode) {
   });
   $('logContainer').style.display = 'none';
   $('guideContainer').style.display = 'none';
+  $('ihContainer').style.display = 'none';
 
   if (mode === 'DET') {
     $('btnModeDet').classList.add('active');
@@ -763,6 +765,9 @@ function switchMainMode(mode) {
     $('btnModeGuide').classList.add('active');
     $('guideContainer').style.display = 'flex';
     updateGuide(); renderDynExpanders(); renderSweep();
+  } else if (mode === 'IH') {
+    $('btnModeIH').classList.add('active');
+    $('ihContainer').style.display = 'block';
   }
 }
 
@@ -822,6 +827,7 @@ window.wipeAndTarget = function(midi, ivKey) {
     setTarget(midi, ivKey);
 }
 
+// DYNAMIC CLUSTER WIPE
 window.wipeCluster = function(targetMidi, targetIv, wipeArray) {
     wipeArray.forEach(item => {
         if (loggedIntervals[item.i]) {
@@ -830,6 +836,28 @@ window.wipeCluster = function(targetMidi, targetIv, wipeArray) {
     });
     savePersistence(); renderLogTable(); updateGuide(); updateDynRes();
     setTarget(targetMidi, targetIv);
+}
+
+window.sampleIH = function(midi) {
+    $('ihResult').className = 'guide-result guide-res-wait';
+    $('ihResult').innerHTML = `Listening to ${noteName(midi)}...<br>Play strongly and let it ring.`;
+    
+    if(tunerFilter) tunerFilter.frequency.value = freq(midi); 
+    
+    if(!tunerActive) $('btnTunerToggle').click(); 
+    
+    setTimeout(() => {
+        if(smoothedPitch > 0) {
+            let cents = 1200 * Math.log2(smoothedPitch / freq(midi));
+            $('ihResult').className = 'guide-result guide-res-pass';
+            $('ihResult').innerHTML = `<b>${noteName(midi)} logged!</b><br>${smoothedPitch.toFixed(2)} Hz (${cents > 0 ? '+':''}${cents.toFixed(1)}c)`;
+            $('ihBtn-'+midi).classList.add('logged');
+        } else {
+            $('ihResult').className = 'guide-result guide-res-warn';
+            $('ihResult').innerHTML = `Could not lock pitch for ${noteName(midi)}.<br>Try again.`;
+        }
+        if(tunerFilter) tunerFilter.frequency.value = 440.0;
+    }, 2500); 
 }
 
 $('btnPause').onclick = async () => {
@@ -1213,6 +1241,21 @@ function checkStep11() {
         {m:60, i:'P4', n:'C4 P4 F4'}
     ];
     
+    let btnContainer = $('finalPolishBtns');
+    if (!btnContainer.hasChildNodes()) {
+        pList.forEach(item => {
+            let b = document.createElement('button');
+            b.className = 'action-btn';
+            b.dataset.midi = item.m;
+            b.dataset.iv = item.i;
+            b.dataset.label = item.n;
+            b.innerHTML = item.n;
+            b.onclick = function() { handleAction(this, item.m, item.i); };
+            btnContainer.appendChild(b);
+        });
+        updateActionButtons();
+    }
+    
     let res = $('guideRes11');
     let badCount = 0; let loggedCount = 0; let msg = '';
     
@@ -1325,9 +1368,9 @@ function renderDynExpanders() {
   let uP8 = expUpMidi - 12, uM10 = expUpMidi - 16, uM17 = expUpMidi - 28, uDouble = expUpMidi - 24;
   
   if(uP8 >= 21) {
-      lBtnsU += `<button class="action-btn listen-btn" onclick="handleListen(this, ${uP8}, 'OCT_21')">2:1</button>`;
       lBtnsU += `<button class="action-btn listen-btn" onclick="handleListen(this, ${uP8}, 'OCT_42')">4:2</button>`;
       lBtnsU += `<button class="action-btn listen-btn" onclick="handleListen(this, ${uP8}, 'OCT_63')">6:3</button>`;
+      lBtnsU += `<button class="action-btn listen-btn" onclick="handleListen(this, ${uP8}, 'OCT_21')">2:1</button>`;
       if(uDouble >= 21) lBtnsU += `<button class="action-btn listen-btn" onclick="handleListen(this, ${uDouble}, 'OCT+2')">OCT+2</button>`;
       
       uBtns += `<button class="action-btn" onclick="handleAction(this, ${uP8}, 'OCT_42')" data-midi="${uP8}" data-iv="OCT_42" data-label="${noteName(uP8)} OCT ${noteName(uP8+12)}">${noteName(uP8)} OCT ${noteName(uP8+12)}</button>`;
@@ -1342,9 +1385,9 @@ function renderDynExpanders() {
   let lBtnsD = ''; let dBtns = '';
   
   if(expDownMidi + 12 <= 108) {
-      lBtnsD += `<button class="action-btn listen-btn" onclick="handleListen(this, ${expDownMidi}, 'OCT_21')">2:1</button>`;
       lBtnsD += `<button class="action-btn listen-btn" onclick="handleListen(this, ${expDownMidi}, 'OCT_42')">4:2</button>`;
       lBtnsD += `<button class="action-btn listen-btn" onclick="handleListen(this, ${expDownMidi}, 'OCT_63')">6:3</button>`;
+      lBtnsD += `<button class="action-btn listen-btn" onclick="handleListen(this, ${expDownMidi}, 'OCT_21')">2:1</button>`;
       if(expDownMidi + 24 <= 108) lBtnsD += `<button class="action-btn listen-btn" onclick="handleListen(this, ${expDownMidi}, 'OCT+2')">OCT+2</button>`;
       
       dBtns += `<button class="action-btn" onclick="handleAction(this, ${expDownMidi}, 'OCT_42')" data-midi="${expDownMidi}" data-iv="OCT_42" data-label="${noteName(expDownMidi)} OCT ${noteName(expDownMidi+12)}">${noteName(expDownMidi)} OCT ${noteName(expDownMidi+12)}</button>`;
@@ -1580,23 +1623,34 @@ function renderLoop(ts) {
           }
       }
       
+      let N, tol, normalTimer;
+      if (cfg.theoBeat > 6.0) { N = 8; tol = 0.2; normalTimer = 2000; }
+      else if (cfg.theoBeat >= 3.0) { N = 6; tol = 0.15; normalTimer = 3000; }
+      else { N = 5; tol = 0.1; normalTimer = 4000; }
+
       let confidentLock = false;
-      if (capturedBeats.length >= 8) {
-          let sortedTemp = [...capturedBeats].sort((a, b) => a - b);
-          let tempMedian = sortedTemp[Math.floor(sortedTemp.length / 2)];
-          let stableCount = capturedBeats.filter(b => Math.abs(b - tempMedian) < 0.4).length;
-          if (stableCount >= 8 && (stableCount / capturedBeats.length) >= 0.75) {
+      if (capturedBeats.length >= N) {
+          let recent = capturedBeats.slice(-N);
+          let rSorted = [...recent].sort((a, b) => a - b);
+          let rMed = rSorted[Math.floor(rSorted.length / 2)];
+          if (recent.every(b => Math.abs(b - rMed) <= tol)) {
               confidentLock = true;
           }
       }
 
-      let maxWaitTime = 4500;
+      let maxWaitTime = 8000;
+      let timeElapsed = now - captureStartTime;
       
-      if (confidentLock || now - captureStartTime > maxWaitTime || snr < threshold.snr * 0.8) {
-          if (capturedBeats.length > 3) {
+      let isNormalTimerUp = timeElapsed > normalTimer;
+      let isOvertimeAndHasBeats = isNormalTimerUp && capturedBeats.length >= 3;
+      let isMaxTimeUp = timeElapsed > maxWaitTime;
+      let isSignalDead = snr < threshold.snr * 0.8;
+
+      if (confidentLock || isOvertimeAndHasBeats || isMaxTimeUp || isSignalDead) {
+          if (capturedBeats.length >= 3) {
               capturedBeats.sort((a,b) => a-b); let median = capturedBeats[Math.floor(capturedBeats.length/2)];
-              let stableCount = capturedBeats.filter(b => Math.abs(b - median) < 0.4).length;
-              if (stableCount / capturedBeats.length >= 0.6 || median === 0.0) {
+              let stableCount = capturedBeats.filter(b => Math.abs(b - median) <= 0.6).length;
+              if (confidentLock || stableCount / capturedBeats.length >= 0.6 || median === 0.0) {
                   lockedAverage = median; avgEl.textContent = lockedAverage.toFixed(2);
                   $('captureStateLbl').textContent = 'LOCKED!'; $('captureStateLbl').style.color = '#00aa00'; captureState = 'LOCKED'; finalizeLog(); 
               } else { captureState = 'IDLE'; $('captureStateLbl').textContent = 'UNSTABLE'; $('captureStateLbl').style.color = '#d00000'; setTimeout(() => { if(!micPaused && captureState==='IDLE') resetCapture(); }, 1500); }
@@ -1663,7 +1717,7 @@ function detectBeat(history, theoreticalBeat, ivKey) {
   return maxScore > 0.005 ? bestCandidate : null;
 }
 
-$('clearBtn').addEventListener('click', () => { loggedIntervals = { M3: [], M6: [], P4: [], P5: [], OCT_42: [], OCT_63: [], OCT_21: [], M10: [], 'OCT+2': [], M17: [] }; savePersistence(); resetCapture(); renderLogTable(); updateGuide(); updateDynRes(); });
+$('clearBtn').addEventListener('click', () => { loggedIntervals = { M3: [], M6: [], P4: [], P5: [], OCT_42: [], OCT_63: [], OCT_21: [], M10: [], 'OCT+2': [], M17: [] }; savePersistence(); resetCapture(); renderLogTable(); analyzeTemperament(); updateGuide(); updateDynRes(); });
 
 document.querySelectorAll('.iv-tab').forEach(t => { 
   t.addEventListener('click', () => { 
