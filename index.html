@@ -19,7 +19,7 @@
   }
 </script>
 
-<title>DAN'S BEAT SPEED DETECTOR - V37</title>
+<title>DAN'S BEAT SPEED DETECTOR - V38</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -40,10 +40,13 @@
     text-shadow: 4px 4px 0 #000, -4px -4px 0 #000, 4px -4px 0 #000, -4px 4px 0 #000,
                  4px 0px 0 #000, -4px 0px 0 #000, 0px 4px 0 #000, 0px -4px 0 #000;
   }
+  /* BUG FIX: Restored the black text-shadow so the white text is visible against the white background */
   #bigStartBtn {
     background: transparent; color: #ffffff; font-size: 2.2rem; font-weight: 900; font-style: italic;
     padding: 12px 36px; border: 4px solid #000000; border-radius: 8px; cursor: pointer; text-transform: uppercase;
     transition: transform 0.1s; box-shadow: 0 6px 0px #000;
+    text-shadow: 3px 3px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000,
+                 3px 0px 0 #000, -3px 0px 0 #000, 0px 3px 0 #000, 0px -3px 0 #000;
   }
   #bigStartBtn:active { transform: translateY(4px); box-shadow: 0 2px 0px #000; }
 
@@ -111,24 +114,28 @@
 
   .dual-readout { display: flex; margin-bottom: 6px; flex-shrink: 0; width: 100%; gap: 6px; }
   .readout-box {
-    flex: 1; border: 3px solid #000; border-radius: 6px; padding: 6px 6px; 
+    flex: 1; border: 3px solid #000; border-radius: 6px; padding: 8px 6px; 
     text-align: center; background: #f0f0f0; position: relative;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
   }
   .val-large { font-size: 2.8rem; font-weight: 900; line-height: 1.1; letter-spacing: -0.02em; }
   .val-lbl { font-size: 0.85rem; text-transform: uppercase; font-weight: 900; color: #000; margin-top: 2px; }
-  .beat-desc { font-size: 0.75rem; font-weight: 800; color: #0066ff; text-transform: uppercase; margin-top: 2px; letter-spacing: 0.05em; }
+  
+  /* BUG FIX: Placed the textbook BPS and Description statically beneath the main readout */
+  .textbook-bps { font-size: 0.75rem; font-weight: 800; color: #0066ff; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  
   #signalLight {
     position: absolute; top: 10px; left: 10px; width: 12px; height: 12px;
     border-radius: 50%; background: #e0e0e0; border: 2px solid #000; transition: background 0.05s, box-shadow 0.05s;
   }
   #captureStateLbl { position: absolute; top: 10px; right: 10px; font-size: 0.7rem; font-weight: 900; color: #666; text-transform: uppercase; }
-  .textbook-bps { position: absolute; bottom: 6px; right: 8px; font-size: 0.85rem; font-weight: 900; color: #666; }
 
-  .workspace { flex: 1 1 auto; overflow: hidden; border: 1px solid #000; border-radius: 4px 4px 0 0; border-bottom: none; background: #ffffff; display: flex; flex-direction: column; }
-  
+  /* BUG FIX: Added min-height: 0 to all flex containers to ensure overflow-y actually scrolls instead of stretching */
+  .workspace { flex: 1 1 0; min-height: 0; overflow: hidden; border: 1px solid #000; border-radius: 4px 4px 0 0; border-bottom: none; background: #ffffff; display: flex; flex-direction: column; }
   #logContainer, #ihContainer { width: 100%; height: 100%; overflow-y: auto; }
-  #guideContainer { flex: 1; width: 100%; height: 100%; overflow: hidden; display: none; flex-direction: column; }
+  #guideContainer { flex: 1 1 0; min-height: 0; width: 100%; height: 100%; overflow: hidden; display: none; flex-direction: column; }
+  .guide-pane { display: none; padding: 8px; flex-direction: column; gap: 8px; background: #f9f9f9; flex: 1 1 0; min-height: 0; overflow-y: auto; }
+  .guide-pane.active { display: flex; }
 
   table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.75rem; table-layout: fixed; }
   th:nth-child(1) { width: 15%; } th:nth-child(2) { width: 16%; } th:nth-child(3) { width: 22%; } th:nth-child(4) { width: 17%; } th:nth-child(5) { width: 20%; } th:nth-child(6) { width: 10%; }
@@ -144,17 +151,12 @@
   .gt-btn:last-child { border-right: none; }
   .gt-btn.active { background: #fff; color: #d00000; border-bottom: 2px solid #fff; margin-bottom: -2px; }
 
-  .guide-pane { display: none; padding: 8px; flex-direction: column; gap: 8px; background: #f9f9f9; overflow-y: auto; flex: 1; }
-  .guide-pane.active { display: flex; }
-
-  .guide-step { border: 2px solid #000; border-radius: 6px; padding: 8px; background: #fff; }
+  .guide-step { border: 2px solid #000; border-radius: 6px; padding: 8px; background: #fff; flex-shrink: 0; }
   .guide-step h3 { font-size: 0.85rem; color: #000; margin-bottom: 4px; text-transform: uppercase; font-weight: 900; background: #eee; padding: 4px; border-radius: 2px; text-align: center; }
   .guide-step p { font-size: 0.75rem; margin-bottom: 6px; font-weight: 600; color: #444; line-height: 1.2; text-align: center; }
   .tuning-target { font-weight: 700; color: #000; text-align: center; margin-bottom: 6px; font-size: 0.75rem; }
   
-  #gPane-UP, #gPane-DOWN, #gPane-CHECK { overflow-y: hidden; justify-content: center; }
-
-  #gPane-UP .guide-step, #gPane-DOWN .guide-step, #gPane-CHECK .guide-step { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 8px; gap: 4px; }
+  #gPane-UP .guide-step, #gPane-DOWN .guide-step, #gPane-CHECK .guide-step { display: flex; flex-direction: column; justify-content: center; padding: 8px; gap: 4px; }
   
   .action-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 4px; justify-content: center; }
   .action-btn { background: #e0f0ff; border: 1px solid #0066ff; color: #0044bb; font-size: 0.75rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; cursor: pointer; box-shadow: 0 2px 0 #0066ff; transition: transform 0.05s, box-shadow 0.05s; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 60px;}
@@ -188,7 +190,7 @@
     background: #f4f4f4; color: #000; cursor: pointer; box-shadow: 0 4px 0 #000;
   }
   .big-nav-controls button:active { transform: translateY(2px); box-shadow: 0 2px 0 #000; background: #e0e0e0; }
-  
+
   @media (orientation: landscape) and (max-height: 650px) {
     body {
       max-width: 900px;
@@ -234,7 +236,7 @@
     .left-panel .readout-box { height: 100%; padding: 4px; }
     .left-panel .val-large    { font-size: clamp(2.6rem, 10vh, 4.5rem); line-height: 1; }
     .left-panel .val-lbl      { font-size: clamp(0.75rem, 2vh, 0.95rem); margin-top: 4px; }
-    .left-panel .textbook-bps { font-size: clamp(0.75rem, 1.8vh, 0.95rem); }
+    .left-panel .textbook-bps { font-size: clamp(0.7rem, 1.8vh, 0.9rem); }
 
     .right-panel { flex: 45; height: 100%; }
   }
@@ -324,8 +326,7 @@
         <div id="captureStateLbl">IDLE</div>
         <div class="val-large" id="avgVal">—</div>
         <div class="val-lbl">AVERAGE BPS</div>
-        <div class="beat-desc" id="beatDesc">Awaiting</div>
-        <div class="textbook-bps" id="lblTarget">~—</div>
+        <div class="textbook-bps" id="lblTarget">TARGET: ~—</div>
       </div>
     </div>
   </div>
@@ -695,6 +696,18 @@ function getDynamicThresholds(midiNote, ivKey) {
   return { env: Math.max(0.0001, minEnv), snr: Math.max(1.0, minSnr) };
 }
 
+function getBeatDesc(val) {
+    if(val === null || isNaN(val)) return '';
+    if(val < 0.25) return 'PURE / STILL';
+    if(val < 0.85) return 'SLOW BREATHING';
+    if(val < 1.6) return 'HEARTBEAT';
+    if(val < 3.5) return 'WALKING PACE';
+    if(val < 6.0) return 'JOGGING';
+    if(val < 9.0) return 'FAST TAPPING';
+    if(val < 13.0) return 'RAPID FLUTTER';
+    return 'MOTOR / PURR';
+}
+
 let curIv = 'M3', lowerMidi = 53, rollBaseMidi = 53; 
 let currentOctMode = 'OCT_42';
 let audioCtx = null, analyserFull = null, analyserTuner = null, filters = [], tunerFilter = null, gainNode = null, monitorGain = null;
@@ -715,19 +728,7 @@ let sweepMidi = 41;
 let sweepIvType = 'M3';
 
 const $ = id => document.getElementById(id);
-const avgEl = $('avgVal'), sigLight = $('signalLight'), beatDescEl = $('beatDesc');
-
-function setBeatDesc(val) {
-    if(val === null || isNaN(val) || captureState==='LISTEN_ONLY') { beatDescEl.textContent = '---'; return; }
-    if(val < 0.25) beatDescEl.textContent = 'PURE / STILL';
-    else if(val < 0.85) beatDescEl.textContent = 'SLOW BREATHING';
-    else if(val < 1.6) beatDescEl.textContent = 'HEARTBEAT';
-    else if(val < 3.5) beatDescEl.textContent = 'WALKING PACE';
-    else if(val < 6.0) beatDescEl.textContent = 'JOGGING';
-    else if(val < 9.0) beatDescEl.textContent = 'FAST TAPPING';
-    else if(val < 13.0) beatDescEl.textContent = 'RAPID FLUTTER';
-    else beatDescEl.textContent = 'MOTOR / PURR';
-}
+const avgEl = $('avgVal'), sigLight = $('signalLight');
 
 function loadPersistence() {
   const savedLogs = localStorage.getItem('danDetectorLogs');
@@ -807,7 +808,6 @@ window.handleListen = function(btn, midi, ivKey) {
     captureState = 'LISTEN_ONLY';
     $('captureStateLbl').textContent = 'LISTENING';
     $('captureStateLbl').style.color = '#0066ff';
-    setBeatDesc(null);
     
     if (!monitorOn) {
         $('btnPassThrough').click();
@@ -910,7 +910,6 @@ function resetCapture() {
   captureState = 'IDLE'; capturedBeats = []; lockedAverage = null; 
   if (!micPaused) { $('captureStateLbl').textContent = 'READY'; $('captureStateLbl').style.color = '#666'; }
   avgEl.textContent = '—';
-  setBeatDesc(null);
 }
 
 function buildPianoRoll() {
@@ -936,7 +935,10 @@ function refreshUI() {
   });
   $('lblInterval').textContent = `${noteName(cfg.lowerMidi)} - ${noteName(cfg.upperMidi)}`;
   $('coincidentPartial').textContent = `${cfg.iv.lp}x / ${cfg.iv.up}x ≈ ${cfg.center.toFixed(1)} Hz`;
-  $('lblTarget').textContent = `~${cfg.theoBeat.toFixed(2)}`;
+  
+  // BUG FIX: Set the descriptive text rigidly to the target BPS and placed below the readout.
+  $('lblTarget').textContent = `TARGET: ~${cfg.theoBeat.toFixed(2)} bps (${getBeatDesc(cfg.theoBeat)})`;
+  
   retuneFilters(cfg);
 }
 
@@ -1261,7 +1263,6 @@ function checkStep11() {
     else { res.className = 'guide-result guide-res-warn'; res.innerHTML = `<span style="color:#d00000;">WARNING: HOWLING INTERVALS FOUND</span><br><br>${msg}<i>Use Auto-Debugger to distribute the error safely.</i>`; }
 }
 
-// STEP 12: THE TEMPERAMENT GRADER (AUTO-DEBUGGER)
 window.checkStep12 = function() {
     let res = $('guideRes12');
     res.innerHTML = '<div style="text-align:center; padding: 10px;">Analyzing Temperament Matrix...</div>';
@@ -1269,23 +1270,18 @@ window.checkStep12 = function() {
     setTimeout(() => {
         let errors = [];
         
-        // Find M3 Dips
         let seqM3 = [53, 54, 55, 56, 57, 58, 59, 60, 61];
         for(let i=1; i<seqM3.length; i++) {
             let vPrev = getLogVal('M3', noteName(seqM3[i-1]));
             let vCur = getLogVal('M3', noteName(seqM3[i]));
             if (vPrev && vCur && vCur <= vPrev) {
-                // Determine the most likely culprit based on P4 bounds
-                let culprit = seqM3[i] + 4; // Top note is usually the un-anchored variable
+                let culprit = seqM3[i] + 4; 
                 let reason = `Widen ${noteName(seqM3[i])} M3`;
                 let fixDir = 'SHARPEN';
                 
-                // If it's a dip, top note might be flat. Sharpening it helps.
-                // Let's check if sharpening top note breaks its lower P4 limit.
                 let p4_to_top = getLogVal('P4', noteName(culprit - 5));
                 if (p4_to_top && p4_to_top > 1.2) {
-                    // P4 is already too fast (wide). Sharpening top note makes it wider. Trapped!
-                    culprit = seqM3[i]; // Target bottom note instead
+                    culprit = seqM3[i]; 
                     reason = `Narrow ${noteName(seqM3[i])} M3 (Top note trapped)`;
                     fixDir = 'FLATTEN';
                 }
@@ -1295,7 +1291,6 @@ window.checkStep12 = function() {
             }
         }
 
-        // Find Fast P4/P5s
         let pList = [
             {m:53, i:'P4'}, {m:53, i:'P5'}, {m:54, i:'P4'}, {m:54, i:'P5'},
             {m:55, i:'P4'}, {m:55, i:'P5'}, {m:56, i:'P4'}, {m:56, i:'P5'},
@@ -1319,7 +1314,6 @@ window.checkStep12 = function() {
             return;
         }
 
-        // De-duplicate errors for the same note
         let uniqueErrors = {};
         errors.forEach(e => {
             if(!uniqueErrors[e.note]) uniqueErrors[e.note] = { dir: e.dir, reasons: [], cluster: [] };
@@ -1345,7 +1339,7 @@ window.checkStep12 = function() {
         });
         
         res.innerHTML = html;
-    }, 400); // Fake delay for UI feel
+    }, 400); 
 }
 
 // --- DYNAMIC EXPANDERS ---
@@ -1616,7 +1610,6 @@ function renderLoop(ts) {
           if (beat !== null) {
               capturedBeats.push(beat);
               avgEl.textContent = beat.toFixed(2);
-              setBeatDesc(beat);
           }
       }
       
@@ -1628,7 +1621,6 @@ function renderLoop(ts) {
               let stableCount = capturedBeats.filter(b => Math.abs(b - median) < 0.6).length;
               if (stableCount / capturedBeats.length >= 0.7 || median === 0.0) {
                   lockedAverage = median; avgEl.textContent = lockedAverage.toFixed(2);
-                  setBeatDesc(lockedAverage);
                   $('captureStateLbl').textContent = 'LOCKED!'; $('captureStateLbl').style.color = '#00aa00'; captureState = 'LOCKED'; finalizeLog(); 
               } else { captureState = 'IDLE'; $('captureStateLbl').textContent = 'UNSTABLE'; $('captureStateLbl').style.color = '#d00000'; setTimeout(() => { if(!micPaused && captureState==='IDLE') resetCapture(); }, 1500); }
           } else { captureState = 'IDLE'; $('captureStateLbl').textContent = 'NO BEAT'; $('captureStateLbl').style.color = '#d00000'; setTimeout(() => { if(!micPaused && captureState==='IDLE') resetCapture(); }, 1500); }
