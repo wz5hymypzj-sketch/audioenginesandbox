@@ -19,7 +19,7 @@
   }
 </script>
 
-<title>DAN'S BEAT SPEED DETECTOR - V42</title>
+<title>DAN'S BEAT SPEED DETECTOR - V43</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -127,6 +127,7 @@
   }
   #captureStateLbl { position: absolute; top: 10px; right: 10px; font-size: 0.7rem; font-weight: 900; color: #666; text-transform: uppercase; }
 
+  /* STRICT FLEXBOX BOUNDARIES TO PREVENT SCROLL BLOWOUT */
   .layout-wrapper { display: flex; flex-direction: column; width: 100%; flex: 1; min-height: 0; overflow: hidden; }
   .left-panel { display: flex; flex-direction: column; flex-shrink: 0; }
   .right-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
@@ -753,7 +754,12 @@ let sweepIvType = 'M3';
 let isGraderActive = false; 
 
 const $ = id => document.getElementById(id);
-const avgEl = $('avgVal'), sigLight = $('signalLight');
+const avgEl = $('avgVal'), sigLight = $('signalLight'), beatDescEl = $('beatDesc');
+
+function setBeatDesc(val) {
+    if(val === null || isNaN(val) || captureState==='LISTEN_ONLY') { beatDescEl.textContent = '---'; return; }
+    beatDescEl.textContent = getBeatDesc(val);
+}
 
 function loadPersistence() {
   const savedLogs = localStorage.getItem('danDetectorLogs');
@@ -833,6 +839,7 @@ window.handleListen = function(btn, midi, ivKey) {
     captureState = 'LISTEN_ONLY';
     $('captureStateLbl').textContent = 'LISTENING';
     $('captureStateLbl').style.color = '#0066ff';
+    setBeatDesc(null);
     
     if (!monitorOn) {
         $('btnPassThrough').click();
@@ -934,6 +941,7 @@ function resetCapture() {
   captureState = 'IDLE'; capturedBeats = []; lockedAverage = null; 
   if (!micPaused) { $('captureStateLbl').textContent = 'READY'; $('captureStateLbl').style.color = '#666'; }
   avgEl.textContent = '—';
+  setBeatDesc(null);
 }
 
 function buildPianoRoll() {
@@ -1639,15 +1647,13 @@ function renderLoop(ts) {
               avgEl.textContent = beat.toFixed(2);
               setBeatDesc(beat);
 
-              // EARLY FAST-LOCK LOGIC
-              if (capturedBeats.length >= 12) {
-                  let recent = capturedBeats.slice(-12);
+              if (capturedBeats.length >= 8) {
+                  let recent = capturedBeats.slice(-8);
                   let sorted = [...recent].sort((a,b)=>a-b);
-                  let med = sorted[6];
-                  // Relative tolerance: 6% of the beat speed, min 0.5 bps
-                  let tol = Math.max(0.5, med * 0.06); 
+                  let med = sorted[4];
+                  let tol = Math.max(1.0, med * 0.15); 
                   let stable = recent.filter(b => Math.abs(b - med) < tol).length;
-                  if (stable >= 10) { 
+                  if (stable >= 6) { 
                       lockedAverage = med; 
                       avgEl.textContent = lockedAverage.toFixed(2);
                       setBeatDesc(lockedAverage);
@@ -1664,16 +1670,22 @@ function renderLoop(ts) {
       let maxWaitTime = lowerMidi >= 58 ? 4500 : 3300;
       
       if (now - captureStartTime > maxWaitTime || snr < threshold.snr * 0.8) {
-          if (capturedBeats.length > 5) {
-              capturedBeats.sort((a,b) => a-b); let median = capturedBeats[Math.floor(capturedBeats.length/2)];
-              let tol = Math.max(0.6, median * 0.08); // dynamic tolerance for fallback lock
-              let stableCount = capturedBeats.filter(b => Math.abs(b - median) < tol).length;
-              if (stableCount / capturedBeats.length >= 0.65 || median === 0.0) {
-                  lockedAverage = median; avgEl.textContent = lockedAverage.toFixed(2);
-                  setBeatDesc(lockedAverage);
-                  $('captureStateLbl').textContent = 'LOCKED!'; $('captureStateLbl').style.color = '#00aa00'; captureState = 'LOCKED'; finalizeLog(); 
-              } else { captureState = 'IDLE'; $('captureStateLbl').textContent = 'UNSTABLE'; $('captureStateLbl').style.color = '#d00000'; setTimeout(() => { if(!micPaused && captureState==='IDLE') resetCapture(); }, 1500); }
-          } else { captureState = 'IDLE'; $('captureStateLbl').textContent = 'NO BEAT'; $('captureStateLbl').style.color = '#d00000'; setTimeout(() => { if(!micPaused && captureState==='IDLE') resetCapture(); }, 1500); }
+          if (capturedBeats.length >= 4) {
+              capturedBeats.sort((a,b) => a-b); 
+              let median = capturedBeats[Math.floor(capturedBeats.length/2)];
+              lockedAverage = median; 
+              avgEl.textContent = lockedAverage.toFixed(2);
+              setBeatDesc(lockedAverage);
+              $('captureStateLbl').textContent = 'LOCKED!'; 
+              $('captureStateLbl').style.color = '#00aa00'; 
+              captureState = 'LOCKED'; 
+              finalizeLog(); 
+          } else { 
+              captureState = 'IDLE'; 
+              $('captureStateLbl').textContent = 'NO BEAT'; 
+              $('captureStateLbl').style.color = '#d00000'; 
+              setTimeout(() => { if(!micPaused && captureState==='IDLE') resetCapture(); }, 1500); 
+          }
       }
   }
 }
