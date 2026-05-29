@@ -19,7 +19,7 @@
   }
 </script>
 
-<title>DAN'S BEAT SPEED DETECTOR - V49</title>
+<title>DAN'S BEAT SPEED DETECTOR - V52</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -127,7 +127,6 @@
   }
   #captureStateLbl { position: absolute; top: 10px; right: 10px; font-size: 0.7rem; font-weight: 900; color: #666; text-transform: uppercase; }
 
-  /* STRICT FLEXBOX BOUNDARIES */
   .layout-wrapper { display: flex; flex-direction: column; width: 100%; flex: 1; min-height: 0; overflow: hidden; }
   .left-panel { display: flex; flex-direction: column; flex-shrink: 0; }
   .right-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
@@ -609,7 +608,6 @@ window.startAudioEngine = async function() {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') await audioCtx.resume();
         
-        // Single, clean microphone request for iOS PWA stability
         micStream = await navigator.mediaDevices.getUserMedia({ 
             audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 } 
         });
@@ -734,7 +732,7 @@ function getBeatDesc(val) {
     return 'MOTOR / PURR';
 }
 
-let curIv = 'M3', lowerMidi = 53, rollBaseMidi = 53; 
+let curIv = 'M3', lowerMidi = 53, rollBaseMidi = 48; // Base set to C3 for standard layout
 let currentOctMode = 'OCT_42';
 let audioCtx = null, analyserFull = null, analyserTuner = null, filters = [], tunerFilter = null, gainNode = null, monitorGain = null;
 let isRunning = false, micPaused = false, monitorOn = false, rafId = null, currentChunkSize = 512; 
@@ -802,7 +800,6 @@ function switchGuideTab(tab) {
 
 window.setTarget = function(midi, ivKey) {
   lowerMidi = midi; 
-  
   document.querySelectorAll('.listen-btn').forEach(b => b.classList.remove('active-listen'));
   
   if (ivKey.startsWith('OCT_')) {
@@ -1527,28 +1524,22 @@ function runTuner() {
 
 $('bigStartBtn').addEventListener('click', async () => {
   $('startOverlay').style.display = 'none';
+  buildPianoRoll(); // Safari layout fix: force piano roll to draw after display:none
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 } });
-    micStream = stream;
-    const constraints = await getBuiltInMicConstraints();
-    if (constraints.deviceId) {
-      stream.getTracks().forEach(t => t.stop());
-      const betterStream = await navigator.mediaDevices.getUserMedia({ audio: constraints });
-      micStream = betterStream;
-    }
-    const activeStream = micStream;
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') await audioCtx.resume();
-    const src = audioCtx.createMediaStreamSource(activeStream);
+    
+    // Clean, secure, single mic request to prevent iOS PWA rejection
+    micStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 } 
+    });
+    
+    const src = audioCtx.createMediaStreamSource(micStream);
+    
     analyserFull = audioCtx.createAnalyser(); analyserFull.fftSize = 4096; analyserFull.smoothingTimeConstant = 0.7;
-    
     tunerFilter = audioCtx.createBiquadFilter(); 
-    tunerFilter.type = 'bandpass'; 
-    tunerFilter.frequency.value = 440.0; 
-    tunerFilter.Q.value = 3.0; 
-    
-    analyserTuner = audioCtx.createAnalyser(); 
-    analyserTuner.fftSize = 4096;
+    tunerFilter.type = 'bandpass'; tunerFilter.frequency.value = 440.0; tunerFilter.Q.value = 3.0; 
+    analyserTuner = audioCtx.createAnalyser(); analyserTuner.fftSize = 4096;
     src.connect(tunerFilter); tunerFilter.connect(analyserTuner);
 
     const cfg = getConfig(lowerMidi, curIv); filters = buildFilters(cfg);
@@ -1556,13 +1547,24 @@ $('bigStartBtn').addEventListener('click', async () => {
     monitorGain = audioCtx.createGain(); monitorGain.gain.value = monitorOn && !micPaused ? 25.0 : 0.0;
     scriptNode = audioCtx.createScriptProcessor(1024, 1, 1);
 
-    src.connect(analyserFull); src.connect(filters[0]); filters[0].connect(filters[1]);
-    filters[1].connect(gainNode); filters[1].connect(monitorGain); monitorGain.connect(audioCtx.destination);
-    gainNode.connect(scriptNode); scriptNode.connect(audioCtx.destination);
+    src.connect(analyserFull); 
+    src.connect(filters[0]); 
+    filters[0].connect(filters[1]); 
+    filters[1].connect(gainNode); 
+    filters[1].connect(monitorGain); 
+    monitorGain.connect(audioCtx.destination);
+    gainNode.connect(scriptNode); 
+    scriptNode.connect(audioCtx.destination);
 
     scriptNode.onaudioprocess = buildAudioProcessor();
-    isRunning = true; lastEnvelope = 0; rafId = requestAnimationFrame(renderLoop);
-  } catch(e) { alert('Microphone setup failed:\n' + e.message); $('startOverlay').style.display = 'flex'; }
+    isRunning = true; 
+    lastEnvelope = 0; 
+    rafId = requestAnimationFrame(renderLoop);
+  } catch(e) { 
+    console.warn("Audio start failed: ", e);
+    alert("Microphone access failed. Please ensure mic permissions are granted in iOS Settings for Home Screen apps.");
+    $('startOverlay').style.display = 'flex'; 
+  }
 });
 
 let smoothedEnvelope = 0; 
@@ -1634,10 +1636,14 @@ function renderLoop(ts) {
   if (snr > threshold.snr && envelopeRunning > threshold.env) { sigLight.style.background = '#00ff00'; } else { sigLight.style.background = '#e0e0e0'; }
   let now = performance.now(); const fps = audioCtx.sampleRate / currentChunkSize; 
   
-  let isFastMode = ['M3', 'M6', 'M10', 'M17'].includes(curIv);
-  let minHistFrames = Math.round(fps * (isFastMode ? 0.8 : 3.5));
+  let minHistFrames = Math.round(fps * 0.5);
 
-  if (captureState === 'WAIT' && now - captureStartTime > 800) { captureState = 'CAPTURING'; $('captureStateLbl').textContent = 'RECORDING...'; $('captureStateLbl').style.color = '#d00000'; }
+  if (captureState === 'WAIT' && now - captureStartTime > 600) { 
+      captureState = 'CAPTURING'; 
+      $('captureStateLbl').textContent = 'RECORDING...'; 
+      $('captureStateLbl').style.color = '#d00000'; 
+  }
+  
   if (captureState === 'CAPTURING') {
       if (envHistory.length >= minHistFrames && snr > threshold.snr && envelopeRunning > threshold.env) { 
           let beat = detectBeat(envHistory, cfg.theoBeat, curIv); 
@@ -1646,14 +1652,15 @@ function renderLoop(ts) {
               avgEl.textContent = beat.toFixed(2);
               setBeatDesc(beat);
 
+              // REINTRODUCED: Very forgiving early fast-lock
               if (capturedBeats.length >= 8) {
                   let recent = capturedBeats.slice(-8);
                   let sorted = [...recent].sort((a,b)=>a-b);
                   let med = sorted[4];
-                  let tol = Math.max(1.0, med * 0.15); 
-                  let stable = recent.filter(b => Math.abs(b - med) <= tol).length;
+                  let tol = Math.max(0.5, med * 0.08); 
+                  let stableCount = recent.filter(b => Math.abs(b - med) <= tol).length;
                   
-                  if (stable >= 5) { 
+                  if (stableCount >= 6) { 
                       lockedAverage = med; 
                       avgEl.textContent = lockedAverage.toFixed(2);
                       setBeatDesc(lockedAverage);
@@ -1661,15 +1668,20 @@ function renderLoop(ts) {
                       $('captureStateLbl').style.color = '#00aa00'; 
                       captureState = 'LOCKED'; 
                       finalizeLog(); 
-                      setTimeout(() => { if(!micPaused && captureState==='LOCKED') resetCapture(); }, 1500);
+                      setTimeout(() => { if(!micPaused && captureState==='LOCKED') resetCapture(); }, 1200);
                       return; 
                   }
               }
           }
       }
       
-      let maxWaitTime = isFastMode ? 3500 : 7500;
+      // DYNAMIC TARGET-BASED WAIT TIME (Will NEVER discard data)
+      let targetBPS = cfg.theoBeat;
+      if (targetBPS < 0.2) targetBPS = 0.5; 
+      let dynamicWaitTimeMs = (3.5 / targetBPS) * 1000;
+      let maxWaitTime = Math.max(1200, Math.min(6000, dynamicWaitTimeMs));
       
+      // Force log exactly when time is up, or if string naturally fades out early
       if (now - captureStartTime > maxWaitTime || snr < threshold.snr * 0.8 || envelopeRunning < threshold.env * 0.8) {
           if (capturedBeats.length >= 1) { 
               capturedBeats.sort((a,b) => a-b); 
@@ -1681,7 +1693,7 @@ function renderLoop(ts) {
               $('captureStateLbl').style.color = '#00aa00'; 
               captureState = 'LOCKED'; 
               finalizeLog(); 
-              setTimeout(() => { if(!micPaused && captureState==='LOCKED') resetCapture(); }, 1500);
+              setTimeout(() => { if(!micPaused && captureState==='LOCKED') resetCapture(); }, 1200);
           } else { 
               captureState = 'IDLE'; 
               $('captureStateLbl').textContent = 'NO BEAT'; 
@@ -1755,6 +1767,25 @@ function detectBeat(history, theoreticalBeat, ivKey) {
   
   return maxScore > 0.005 ? bestCandidate : null;
 }
+
+// SYNC FIX: Centralize tab clicks through the setTarget function
+document.querySelectorAll('.iv-tab').forEach(t => { 
+  t.addEventListener('click', () => { 
+    let selectedIv = t.dataset.iv;
+    
+    if (selectedIv === 'OCT') {
+        if (t.classList.contains('on')) {
+            if (currentOctMode === 'OCT_42') { currentOctMode = 'OCT_63'; }
+            else if (currentOctMode === 'OCT_63') { currentOctMode = 'OCT_21'; }
+            else { currentOctMode = 'OCT_42'; }
+        }
+        selectedIv = currentOctMode;
+    }
+    setTarget(lowerMidi, selectedIv);
+  }); 
+});
+
+enforceReblitzLimits(); buildPianoRoll(); renderDynExpanders(); renderSweep();
 </script>
 </body>
 </html>
