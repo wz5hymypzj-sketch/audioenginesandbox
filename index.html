@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>DAN'S TUNER - SANDBOX SPEED TEST</title>
+<title>DAN'S TUNER - FORCED AVERAGE SANDBOX</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -18,7 +18,7 @@
     position: fixed; inset: 0; background: #ffffff; z-index: 9999; display: flex;
     flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center;
   }
-  #startOverlay h1 { font-size: 2.5rem; color: #ff0000; font-weight: 900; font-style: italic; margin-bottom: 20px;}
+  #startOverlay h1 { font-size: 2.2rem; color: #ff0000; font-weight: 900; font-style: italic; margin-bottom: 20px; line-height: 1.1;}
   #bigStartBtn {
     background: transparent; color: #fff; background: #000; font-size: 2rem; font-weight: 900;
     padding: 15px 40px; border-radius: 8px; cursor: pointer; border: none; box-shadow: 0 6px 0px #333;
@@ -60,7 +60,7 @@
     border: 4px solid #000; border-radius: 8px; padding: 15px 10px; margin-bottom: 8px;
     text-align: center; background: #f0f0f0; position: relative;
   }
-  .val-large { font-size: 4rem; font-weight: 900; line-height: 1; letter-spacing: -0.02em; }
+  .val-large { font-size: 4rem; font-weight: 900; line-height: 1; letter-spacing: -0.02em; transition: color 0.1s; }
   .val-lbl { font-size: 1rem; text-transform: uppercase; font-weight: 900; color: #000; margin-top: 4px; }
   
   #signalLight { position: absolute; top: 15px; left: 15px; width: 16px; height: 16px; border-radius: 50%; background: #e0e0e0; border: 2px solid #000; }
@@ -80,14 +80,14 @@
 <body>
 
 <div id="startOverlay">
-  <h1>SPEED SANDBOX</h1>
-  <p style="margin-bottom:20px; font-weight:bold;">Instant-Lock evaluation enabled.</p>
+  <h1>FORCED AVG SANDBOX</h1>
+  <p style="margin-bottom:20px; font-weight:bold; padding: 0 20px;">Features instant Green lock for clean strings, and Orange fallback average for messy strings.</p>
   <button id="bigStartBtn">START ENGINE</button>
 </div>
 
 <div class="header">
   <h1>DBSD</h1>
-  <div class="subtitle">Speed & Accuracy Sandbox</div>
+  <div class="subtitle">Fallback Average Sandbox</div>
 </div>
 
 <div class="controls-row">
@@ -132,9 +132,8 @@ let audioCtx, micStream, analyserFull, gainNode, scriptNode, filters = [];
 let isRunning = false, micPaused = false, currentChunkSize = 256, rafId = null; 
 let noiseFloor = 0.001, envelopeRunning = 0, lastEnvelope = 0, envHistory = [];    
 
-// AGGRESSIVE SPEED TWEAKS
 let transientSamplesLeft = 0, lastAttackTime = 0;
-const TRANSIENT_DELAY_MS = 200; // Drastically reduced from 450ms
+const TRANSIENT_DELAY_MS = 250; 
 let transientLockout = 0;
 
 let captureState = 'IDLE', captureStartTime = 0, capturedBeats = [], lockedAverage = null;
@@ -143,7 +142,6 @@ let lastAudioFrameTime = 0;
 let curIv = 'M3', lowerMidi = 53, rollBaseMidi = 53;
 let loggedIntervals = { M3: [], M6: [], P4: [], P5: [], M10: [] };
 
-// Standard ET curve for target calculations
 let tuningCurve = new Float32Array(109);
 for(let m=21; m<=108; m++) tuningCurve[m] = 440 * Math.pow(2, (m - 69) / 12);
 
@@ -235,7 +233,7 @@ function retuneFilters(cfg) {
 function resetCapture() { 
     captureState = 'IDLE'; capturedBeats = []; lockedAverage = null; 
     if (!micPaused) { stateLbl.textContent = 'READY'; stateLbl.style.color = '#666'; } 
-    avgEl.textContent = '—'; 
+    avgEl.textContent = '—'; avgEl.style.color = '#000';
 }
 
 function buildPianoRoll() {
@@ -263,7 +261,8 @@ function refreshUI() {
   retuneFilters(cfg);
 }
 
-function finalizeLog() {
+// Added 'isForced' flag to alter table color
+function finalizeLog(isForced = false) {
   if (lockedAverage === null) return; 
   const cfg = getConfig(lowerMidi, curIv); 
   let entry = loggedIntervals[curIv].find(x => x.midi === lowerMidi);
@@ -272,6 +271,7 @@ function finalizeLog() {
       loggedIntervals[curIv].push(entry); 
   }
   entry.measured = lockedAverage;
+  entry.isForced = isForced;
   renderLogTable();
 }
 
@@ -281,7 +281,8 @@ function renderLogTable() {
     entries.sort((a, b) => a.midi - b.midi);
     for (let i = entries.length - 1; i >= 0; i--) {
       const c = entries[i];
-      tb.innerHTML += `<tr><td><b>${curIv}</b></td><td>${c.noteName}</td><td style="font-weight:900; color:#0066cc;">${c.measured.toFixed(2)}</td><td style="color:#888;">~${c.target.toFixed(2)}</td></tr>`;
+      let color = c.isForced ? '#ff9900' : '#00aa00'; // Orange if forced, Green if clean
+      tb.innerHTML += `<tr><td><b>${curIv}</b></td><td>${c.noteName}</td><td style="font-weight:900; color:${color};">${c.measured.toFixed(2)}</td><td style="color:#888;">~${c.target.toFixed(2)}</td></tr>`;
     }
   } else { tb.innerHTML = '<tr><td colspan="4" style="color:#888; padding: 20px;">Logs will appear here instantly upon lock.</td></tr>'; }
 }
@@ -314,10 +315,11 @@ function buildAudioProcessor() {
       
       if (isStrike && snr > 1.8) { 
           const timeNow = performance.now(); 
-          if (timeNow - lastAttackTime > 250) { // Tighter Restrike lock
-              envHistory = []; lastAttackTime = timeNow; transientSamplesLeft = 8; // Fewer frames to wait
+          if (timeNow - lastAttackTime > 250) { 
+              envHistory = []; lastAttackTime = timeNow; transientSamplesLeft = 8;
               captureState = 'WAIT'; captureStartTime = timeNow; capturedBeats = []; 
               stateLbl.textContent = 'ATTACK...'; stateLbl.style.color = '#ff9900'; 
+              avgEl.style.color = '#000';
           } 
       }
       if (transientSamplesLeft > 0) { transientSamplesLeft--; } 
@@ -330,10 +332,35 @@ function buildAudioProcessor() {
   };
 }
 
+// THE FORCED AVERAGE FALLBACK
+function forceAverageLock() {
+    // 1. Sort the collected beats
+    let sorted = [...capturedBeats].sort((a, b) => a - b);
+    
+    // 2. Trim the highest and lowest 20% to toss out chaotic false beat readings
+    let trimCount = Math.floor(sorted.length * 0.2);
+    let middleChunk = sorted.slice(trimCount, sorted.length - trimCount);
+    
+    if (middleChunk.length === 0) middleChunk = sorted; // Saftey check
+    
+    // 3. Average the remaining middle values
+    let sum = middleChunk.reduce((a, b) => a + b, 0);
+    lockedAverage = sum / middleChunk.length;
+    
+    // 4. Update UI (Flagged as Orange/Warning)
+    avgEl.textContent = lockedAverage.toFixed(2);
+    avgEl.style.color = '#ff9900'; 
+    stateLbl.textContent = 'FORCED LOCK'; 
+    stateLbl.style.color = '#ff9900'; 
+    captureState = 'LOCKED'; 
+    
+    // Pass true to flag as forced
+    finalizeLog(true); 
+}
+
 function renderLoop() {
   if (!isRunning) return; rafId = requestAnimationFrame(renderLoop); if (micPaused) return;
   
-  const cfg = getConfig(lowerMidi, curIv); 
   const snr = envelopeRunning / noiseFloor; 
   let minEnv = 0.002, minSnr = 1.8;
   if (lowerMidi > 60) { minEnv *= 0.5; minSnr *= 0.5; }
@@ -343,57 +370,74 @@ function renderLoop() {
   
   let now = performance.now(); 
   const fps = audioCtx.sampleRate / currentChunkSize; 
-  let minHistFrames = Math.round(fps * 0.3); // Starts checking sooner
+  let minHistFrames = Math.round(fps * 0.3);
   
-  if (captureState === 'WAIT' && now - captureStartTime > 200) { // Slashed wait time
-      captureState = 'CAPTURING'; stateLbl.textContent = 'LISTENING...'; stateLbl.style.color = '#0066ff'; 
+  if (captureState === 'WAIT' && now - captureStartTime > 200) { 
+      captureState = 'CAPTURING'; stateLbl.textContent = 'TRACKING...'; stateLbl.style.color = '#0066ff'; 
   }
   
   if (captureState === 'CAPTURING') {
       if (envHistory.length >= minHistFrames && snr > minSnr && envelopeRunning > minEnv) { 
-          let beat = detectBeat(envHistory, cfg.theoBeat, curIv); 
+          let beat = detectBeat(envHistory, curIv); 
           if (beat !== null) { 
               capturedBeats.push(beat); 
-              avgEl.textContent = beat.toFixed(2); 
+              
+              // Keep a massive rolling window for the forced average fallback
+              if (capturedBeats.length > 25) capturedBeats.shift();
+
+              // LIVE DISPLAY (Updates constantly using a smaller recent window)
+              let liveWindow = capturedBeats.slice(-8);
+              let sortedLive = [...liveWindow].sort((a,b)=>a-b);
+              let currentMedian = sortedLive[Math.floor(sortedLive.length/2)];
+
+              avgEl.textContent = currentMedian.toFixed(2);
+              avgEl.style.color = '#0066ff'; // Blue indicates it is tracking live
+
+              // IDEAL INSTANT LOCK LOGIC (Clean strings only)
+              if (capturedBeats.length >= 6) {
+                  let recentBeats = capturedBeats.slice(-5);
+                  recentBeats.sort((a,b) => a-b); 
+                  let windowSpread = recentBeats[recentBeats.length-1] - recentBeats[0];
+                  
+                  if (windowSpread <= 0.6) { 
+                      lockedAverage = recentBeats[Math.floor(recentBeats.length/2)]; 
+                      avgEl.textContent = lockedAverage.toFixed(2); 
+                      avgEl.style.color = '#00aa00'; // Turn Green
+                      stateLbl.textContent = 'LOCKED!'; stateLbl.style.color = '#00aa00'; 
+                      captureState = 'LOCKED'; 
+                      finalizeLog(false); // Clean lock
+                  }
+              }
           } 
       }
       
-      // INSTANT LOCK LOGIC
-      let minBeatsRequired = (cfg.theoBeat > 6.0) ? 3 : ((cfg.theoBeat >= 3.0) ? 3 : 2); // Reduced requirements
-      
-      if (capturedBeats.length >= minBeatsRequired) {
-          let recentBeats = capturedBeats.slice(-minBeatsRequired);
-          recentBeats.sort((a,b) => a-b); 
-          let median = recentBeats[Math.floor(recentBeats.length/2)]; 
-          
-          // Are the recent beats tightly clustered?
-          let stableCount = recentBeats.filter(b => Math.abs(b - median) <= 0.6).length;
-          
-          // If stable, lock instantly!
-          if (stableCount >= minBeatsRequired - 1 || median === 0.0) { 
-              lockedAverage = median; 
-              avgEl.textContent = lockedAverage.toFixed(2); 
-              stateLbl.textContent = 'LOCKED!'; stateLbl.style.color = '#00aa00'; 
-              captureState = 'LOCKED'; 
-              finalizeLog(); 
+      // FALLBACK LOGIC: If 4.5 seconds pass and we never hit the ideal lock...
+      if (now - captureStartTime > 4500) {
+          if (capturedBeats.length >= 6) { // Make sure we actually heard enough data
+              forceAverageLock();
+          } else {
+              captureState = 'IDLE'; stateLbl.textContent = 'NO BEAT'; stateLbl.style.color = '#d00000'; 
+              avgEl.style.color = '#ccc';
+              setTimeout(() => { if(!micPaused && captureState==='IDLE') resetCapture(); }, 1000); 
           }
-      }
-      
-      // Fallback Timeout (If it struggles for 2.5 seconds, reset)
-      if (now - captureStartTime > 2500 || (now - captureStartTime > 1000 && snr < minSnr * 0.5)) {
-          captureState = 'IDLE'; stateLbl.textContent = 'NO BEAT'; stateLbl.style.color = '#d00000'; 
+      } 
+      // Fast abort if string dies quickly
+      else if (now - captureStartTime > 1500 && snr < minSnr * 0.5) {
+          captureState = 'IDLE'; stateLbl.textContent = 'SIGNAL LOST'; stateLbl.style.color = '#d00000'; 
+          avgEl.style.color = '#ccc';
           setTimeout(() => { if(!micPaused && captureState==='IDLE') resetCapture(); }, 1000); 
       }
   }
 }
 
-function detectBeat(history, theoreticalBeat, ivKey) {
+function detectBeat(history, ivKey) {
   const N = history.length; const fps = audioCtx.sampleRate / currentChunkSize; const vals = history.map(h => h.val); const windowSize = Math.round(fps * 0.45); const valAvg = vals.reduce((a,b) => a+b, 0) / N;
   const AC = new Float32Array(N); for (let i = 0; i < N; i++) { let start = Math.max(0, i - Math.floor(windowSize / 2)), end = Math.min(N, i + Math.ceil(windowSize / 2)), localSum = 0; for (let j = start; j < end; j++) localSum += vals[j]; AC[i] = vals[i] - (localSum / (end - start)); }
   let ac0 = 0; for (let i = 0; i < N; i++) ac0 += AC[i] * AC[i]; let beatIntensity = Math.sqrt(ac0 / N) / valAvg; if (beatIntensity < 0.008 && valAvg > 0.002) return 0.0; if (ac0 < 1e-12) return null;
-  const minLag = Math.max(2, Math.round(fps / 55)), maxLag = Math.min(N - 2, Math.round(fps / 0.5)); const ac = new Float32Array(maxLag + 1); for (let lag = minLag; lag <= maxLag; lag++) { let sum = 0; for (let i = 0; i < N - lag; i++) sum += AC[i] * AC[i + lag]; ac[lag] = sum / ac0; }
+  const minLag = Math.max(2, Math.round(fps / 55)), maxLag = Math.min(N - 2, Math.round(fps / 0.2)); const ac = new Float32Array(maxLag + 1); for (let lag = minLag; lag <= maxLag; lag++) { let sum = 0; for (let i = 0; i < N - lag; i++) sum += AC[i] * AC[i + lag]; ac[lag] = sum / ac0; }
   
-  const peaks = []; let acThreshold = theoreticalBeat > 10.0 ? 0.01 : 0.02; if (ivKey === 'M10') acThreshold = 0.008; if (ivKey === 'P4' || ivKey === 'P5') acThreshold = 0.005;
+  const peaks = []; let acThreshold = 0.01; 
+  if (ivKey === 'M10') acThreshold = 0.008; if (ivKey === 'P4' || ivKey === 'P5') acThreshold = 0.005;
   for (let lag = minLag + 1; lag < maxLag; lag++) { if (ac[lag] > ac[lag - 1] && ac[lag] > ac[lag + 1] && ac[lag] > acThreshold) peaks.push({ lag, ac: ac[lag] }); }
   if (peaks.length === 0) return null;
   
@@ -401,10 +445,10 @@ function detectBeat(history, theoreticalBeat, ivKey) {
   peaks.forEach(p => {
     let alpha = ac[p.lag - 1], beta = ac[p.lag], gamma = ac[p.lag + 1]; let denom = alpha - 2 * beta + gamma; let pLag = p.lag;
     if (Math.abs(denom) > 1e-5) pLag = p.lag + 0.5 * (alpha - gamma) / denom; let rate = fps / pLag; 
-    let allowedDev = Math.max(1.0, theoreticalBeat * 0.35); if (Math.abs(rate - theoreticalBeat) > allowedDev) return; 
-    let score = p.ac; 
-    let ratio = rate / theoreticalBeat; let distanceDev = theoreticalBeat === 0 ? 0 : Math.abs(Math.log2(ratio)); let proximityWeight = theoreticalBeat === 0 ? 1.0 : Math.exp(-0.5 * Math.pow(distanceDev / 0.8, 2)); if (rate < 0.15 || rate > 43.0) proximityWeight = 0.0; score *= proximityWeight;
-    if (score > maxScore) { maxScore = score; bestCandidate = rate; }
+    
+    if (rate < 0.2 || rate > 25.0) return; 
+    
+    if (p.ac > maxScore) { maxScore = p.ac; bestCandidate = rate; }
   }); 
   return maxScore > 0.005 ? bestCandidate : null;
 }
