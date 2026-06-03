@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>DAN'S TUNER - FORCED AVERAGE SANDBOX</title>
+<title>DAN'S TUNER - HIGH ACCURACY SANDBOX</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -80,14 +80,14 @@
 <body>
 
 <div id="startOverlay">
-  <h1>FORCED AVG SANDBOX</h1>
-  <p style="margin-bottom:20px; font-weight:bold; padding: 0 20px;">Features instant Green lock for clean strings, and Orange fallback average for messy strings.</p>
+  <h1>HIGH ACCURACY</h1>
+  <p style="margin-bottom:20px; font-weight:bold; padding: 0 20px;">Requires more cycles to lock. Uses 8-beat stable window.</p>
   <button id="bigStartBtn">START ENGINE</button>
 </div>
 
 <div class="header">
   <h1>DBSD</h1>
-  <div class="subtitle">Fallback Average Sandbox</div>
+  <div class="subtitle">High Accuracy Sandbox</div>
 </div>
 
 <div class="controls-row">
@@ -261,7 +261,6 @@ function refreshUI() {
   retuneFilters(cfg);
 }
 
-// Added 'isForced' flag to alter table color
 function finalizeLog(isForced = false) {
   if (lockedAverage === null) return; 
   const cfg = getConfig(lowerMidi, curIv); 
@@ -281,7 +280,7 @@ function renderLogTable() {
     entries.sort((a, b) => a.midi - b.midi);
     for (let i = entries.length - 1; i >= 0; i--) {
       const c = entries[i];
-      let color = c.isForced ? '#ff9900' : '#00aa00'; // Orange if forced, Green if clean
+      let color = c.isForced ? '#ff9900' : '#00aa00';
       tb.innerHTML += `<tr><td><b>${curIv}</b></td><td>${c.noteName}</td><td style="font-weight:900; color:${color};">${c.measured.toFixed(2)}</td><td style="color:#888;">~${c.target.toFixed(2)}</td></tr>`;
     }
   } else { tb.innerHTML = '<tr><td colspan="4" style="color:#888; padding: 20px;">Logs will appear here instantly upon lock.</td></tr>'; }
@@ -332,29 +331,20 @@ function buildAudioProcessor() {
   };
 }
 
-// THE FORCED AVERAGE FALLBACK
 function forceAverageLock() {
-    // 1. Sort the collected beats
     let sorted = [...capturedBeats].sort((a, b) => a - b);
-    
-    // 2. Trim the highest and lowest 20% to toss out chaotic false beat readings
     let trimCount = Math.floor(sorted.length * 0.2);
     let middleChunk = sorted.slice(trimCount, sorted.length - trimCount);
+    if (middleChunk.length === 0) middleChunk = sorted; 
     
-    if (middleChunk.length === 0) middleChunk = sorted; // Saftey check
-    
-    // 3. Average the remaining middle values
     let sum = middleChunk.reduce((a, b) => a + b, 0);
     lockedAverage = sum / middleChunk.length;
     
-    // 4. Update UI (Flagged as Orange/Warning)
     avgEl.textContent = lockedAverage.toFixed(2);
     avgEl.style.color = '#ff9900'; 
     stateLbl.textContent = 'FORCED LOCK'; 
     stateLbl.style.color = '#ff9900'; 
     captureState = 'LOCKED'; 
-    
-    // Pass true to flag as forced
     finalizeLog(true); 
 }
 
@@ -382,8 +372,8 @@ function renderLoop() {
           if (beat !== null) { 
               capturedBeats.push(beat); 
               
-              // Keep a massive rolling window for the forced average fallback
-              if (capturedBeats.length > 25) capturedBeats.shift();
+              // Keep a larger rolling window to support the stricter requirements
+              if (capturedBeats.length > 30) capturedBeats.shift();
 
               // LIVE DISPLAY (Updates constantly using a smaller recent window)
               let liveWindow = capturedBeats.slice(-8);
@@ -393,9 +383,10 @@ function renderLoop() {
               avgEl.textContent = currentMedian.toFixed(2);
               avgEl.style.color = '#0066ff'; // Blue indicates it is tracking live
 
-              // IDEAL INSTANT LOCK LOGIC (Clean strings only)
-              if (capturedBeats.length >= 6) {
-                  let recentBeats = capturedBeats.slice(-5);
+              // STRICT INSTANT LOCK LOGIC (High Accuracy)
+              // INCREASED: Now requires 12 beats, checking stability of the last 8
+              if (capturedBeats.length >= 12) {
+                  let recentBeats = capturedBeats.slice(-8);
                   recentBeats.sort((a,b) => a-b); 
                   let windowSpread = recentBeats[recentBeats.length-1] - recentBeats[0];
                   
@@ -411,9 +402,10 @@ function renderLoop() {
           } 
       }
       
-      // FALLBACK LOGIC: If 4.5 seconds pass and we never hit the ideal lock...
-      if (now - captureStartTime > 4500) {
-          if (capturedBeats.length >= 6) { // Make sure we actually heard enough data
+      // FALLBACK LOGIC: Extended to 6.0 seconds for maximum patience
+      if (now - captureStartTime > 6000) {
+          // INCREASED: Requires at least 10 beats to attempt an average
+          if (capturedBeats.length >= 10) { 
               forceAverageLock();
           } else {
               captureState = 'IDLE'; stateLbl.textContent = 'NO BEAT'; stateLbl.style.color = '#d00000'; 
@@ -422,7 +414,7 @@ function renderLoop() {
           }
       } 
       // Fast abort if string dies quickly
-      else if (now - captureStartTime > 1500 && snr < minSnr * 0.5) {
+      else if (now - captureStartTime > 2000 && snr < minSnr * 0.5) {
           captureState = 'IDLE'; stateLbl.textContent = 'SIGNAL LOST'; stateLbl.style.color = '#d00000'; 
           avgEl.style.color = '#ccc';
           setTimeout(() => { if(!micPaused && captureState==='IDLE') resetCapture(); }, 1000); 
